@@ -1,7 +1,7 @@
 #ifndef REGISTER_H
 #define REGISTER_H
 
-#define HEADER_SIZE 16
+#define HEADER_SIZE 17
 #define REGISTER_SIZE 80
 #define READ_BINARY_MODE "rb+"
 

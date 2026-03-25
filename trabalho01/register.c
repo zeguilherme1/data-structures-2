@@ -20,7 +20,7 @@ struct record {
 
 
 int write_register(char* filename, Record* new_register) {
-	File* file = fopen(filename, READ_BINARY_MODE);
+	FILE* file = fopen(filename, READ_BINARY_MODE);
 
 	// todo: implement the complete function
 	
@@ -28,7 +28,7 @@ int write_register(char* filename, Record* new_register) {
 	return 0;
 }
 
-Register* read_register_RRN(char* filename, int RRN) {
+Record* read_register_RRN(char* filename, int RRN) {
 	FILE* file = fopen(filename, READ_BINARY_MODE);
 
 
