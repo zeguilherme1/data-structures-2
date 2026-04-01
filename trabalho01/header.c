@@ -1,14 +1,6 @@
 #include <stdio.h>
 #include "header.h"
 
-struct header {
-	char status; 
-    int top;
-    int nextRRN;
-    int station_num;
-    int station_pairs_num;
-};
-
 Header* new_header() {
     /*
         This function creates a new header and set up initial values
@@ -36,7 +28,7 @@ Header* new_header() {
     return new_header;
 }
 
-void save_reader(FILE* bin_file, Header* header) {
+void save_header(FILE* bin_file, Header* header) {
     /*
         This function save a header struct to a binary file
 
