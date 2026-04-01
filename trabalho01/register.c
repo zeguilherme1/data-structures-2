@@ -57,8 +57,29 @@ Record* tokenize_register(char *buffer) {
 }
 
 void save_register_to_bin(FILE* bin_filename, Record* new_register) {
-	// Todo
+	long register_begin = ftell(bin_filename);
 
+	save_register(bin_filename, new_register);
+
+	fwrite(&new_register->station_name_size, sizeof(int), 1, bin_filename);
+
+	if(new_register->station_name_size > 0) {
+		fwrite(new_register->station_name, sizeof(char), new_register->station_name_size, bin_filename);
+	}
+
+	fwrite(&new_register->line_name_size, sizeof(int), 1, bin_filename);
+	if(new_register->line_name_size > 0) {
+		fwrite(new_register->line_name, sizeof(char), new_register->line_name_size, bin_filename);
+	}
+
+	long register_end = ftell(bin_filename);
+
+	int remain_bytes = REGISTER_SIZE - (register_end - register_begin);
+
+	if(remain_bytes > 0) {
+		char empty = '$';
+		for(int i = 0; i < remain_bytes; i++) fwrite(&empty, sizeof(char), 1, bin_filename);
+	}
 
 }
 
@@ -90,5 +111,23 @@ Record* read_register_RRN(char* filename, int RRN) {
 	fclose(file);
 	return 0;
 
+}
+
+void free_register(Record** temp_register) {
+	if(!temp_register) return;
+
+	if((*temp_register)->station_name) {
+		free((*temp_register)->station_name);
+		(*temp_register)->station_name = NULL;
+	}
+
+	if((*temp_register)->line_name) {
+		free((*temp_register)->line_name);
+		(*temp_register)->line_name = NULL;
+	}
+
+	free(*temp_register);
+
+	*temp_register = NULL;
 }
 

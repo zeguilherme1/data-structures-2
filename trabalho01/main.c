@@ -3,7 +3,7 @@
 #include "register.h"
 #include "header.h"
 
-void csv_to_bin() {
+int csv_to_bin() {
 	char csv_filename[100], bin_filename[100];
 
 	scanf("%s %s", csv_filename, bin_filename);
@@ -20,6 +20,8 @@ void csv_to_bin() {
 	char buffer[200]; // Removes the first CSV line
 	fgets(buffer, sizeof(buffer), csv_file);
 
+	int register_counter = 0;
+
 	while(fgets(buffer, sizeof(buffer), csv_file)) {
 		Record *new_register = tokenize_register(buffer);
 
@@ -28,10 +30,18 @@ void csv_to_bin() {
 		new_register->removed = '0';
 		new_register->next_register = temp_header->top;
 
-		
+		save_register_to_bin(bin_file, new_register);
+		register_counter++;
+
+		free_register(&new_register);
 	}
 
+	temp_header->status = '0';
+	temp_header->nextRRN = register_counter;
 
+	save_header(bin_file, temp_header);
+
+	return 0;
 }
 
 int main() {
