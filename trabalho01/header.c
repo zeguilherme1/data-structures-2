@@ -47,4 +47,32 @@ void save_header(FILE* bin_file, Header* header) {
    fwrite(&header->station_pairs_num, sizeof(int), 1, bin_file);
 }
 
+int read_header(FILE* bin_file, Header* bin_header){
+    /*
+        This function confirm the if header was successful read
+
+        Args:
+            (FILE*) bin_file: binary input file
+            (Header*) header: the header struct that will be read
+
+        Return:
+            0 for sucess and -1 for fail
+    
+    */
+
+    if(!bin_file) return -1;
+    if(!bin_header) return -1;
+
+    int verify = 0;
+
+    verify += fread(&bin_header->status, sizeof(char), 1, bin_file);
+    verify += fread(&bin_header->top, sizeof(int), 1, bin_file);
+    verify += fread(&bin_header->nextRRN, sizeof(int), 1, bin_file);
+    verify += fread(&bin_header->station_num, sizeof(int), 1, bin_file);
+    verify += fread(&bin_header->station_pairs_num, sizeof(int), 1, bin_file);
+
+    if(verify == 5) return 0;
+    else return -1;
+}
+
 

@@ -31,11 +31,15 @@ typedef struct record {
 	char* line_name;
 } Record;
 
+Record* new_record();
+
 int write_register(char *filename, Record* new_record);
 
 Record* tokenize_register(char *buffer);
 void save_register_to_bin(FILE* bin_filename, Record* new_register);
 void save_register(FILE* bin_filename, Record* new_register);
+int read_register(FILE* bin_file, Record* bin_register);
+void print_register(Record* bin_register);
 Record* read_register_RRN(char* filename, int RRN);
 
 #endif

@@ -16,8 +16,10 @@ typedef struct header {
     int station_pairs_num;
 } Header;
 
-Header* create_header();
+Header* new_header();
 
 void save_header(FILE* bin_file, Header* bin_header);
+
+int read_header(FILE* bin_file, Header* bin_header);
 
 #endif
