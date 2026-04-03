@@ -1,8 +1,8 @@
-#ifndef REGISTER_H
-#define REGISTER_H
+#ifndef RECORD_H
+#define RECORD_H
 
 #define HEADER_SIZE 17
-#define REGISTER_SIZE 80
+#define record_SIZE 80
 #define READ_BINARY_MODE "rb+"
 #define WRITE_BINARY_MODE "wb+"
 
@@ -16,7 +16,7 @@
 
 typedef struct record {
 	char removed;
-	int next_register;
+	int next_record;
 	int station_code;
 	int line_code;
 	int next_station_code;
@@ -33,13 +33,14 @@ typedef struct record {
 
 Record* new_record();
 
-int write_register(char *filename, Record* new_record);
+int write_record(char *filename, Record* new_record);
 
-Record* tokenize_register(char *buffer);
-void save_register_to_bin(FILE* bin_filename, Record* new_register);
-void save_register(FILE* bin_filename, Record* new_register);
-int read_register(FILE* bin_file, Record* bin_register);
-void print_register(Record* bin_register);
-Record* read_register_RRN(char* filename, int RRN);
+Record* tokenize_record(char *buffer);
+void save_record_to_bin(FILE* bin_filename, Record* new_record);
+void save_record(FILE* bin_filename, Record* new_record);
+int read_record(FILE* bin_file, Record* bin_record);
+void print_record(Record* bin_record);
+void free_record(Record** temp_record);
+Record* read_record_RRN(char* filename, int RRN);
 
 #endif

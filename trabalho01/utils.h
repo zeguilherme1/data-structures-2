@@ -7,5 +7,6 @@
 
 int csv_to_bin();
 int bin_to_text();
+int integer_or_null(char* str);
 
 #endif
