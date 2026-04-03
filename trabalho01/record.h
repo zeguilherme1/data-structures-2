@@ -41,6 +41,7 @@ void save_record(FILE* bin_filename, Record* new_record);
 int read_record(FILE* bin_file, Record* bin_record);
 void print_record(Record* bin_record);
 void free_record(Record** temp_record);
+int matches_record_criteria(Record* bin_record, Search_criteria* criteria, int num_fiels);
 Record* read_record_RRN(char* filename, int RRN);
 
 #endif

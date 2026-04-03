@@ -192,6 +192,49 @@ void print_record(Record* bin_record){
 	printf("\n");
 }
 
+int matches_record_criteria(Record* bin_record, Search_criteria* criteria, int num_fiels){
+	/*
+        This function confirm if the record was successful compared with the criteria
+
+        Args:
+            (Record*) bin_record: the record struct to be compared
+			(Search_criteria*) criteria: the criteria struct that will be comparision parameter
+			int num_fields: the number of fields to be compared
+        
+		Return:
+            0 for sucess and -1 for fail
+    
+    */
+
+	for(int i = 0; i < num_fiels; i++){
+		if(strcmp(criteria[i].field_name, "nomeEstacao") == 0){
+			if(strcmp(criteria[i].field_value, bin_record->station_name) != 0) return -1;
+		} else if(strcmp(criteria[i].field_name, "nomeLinha") == 0){
+			if(strcmp(criteria[i].field_value, bin_record->line_name) != 0) return -1;
+		} else {
+			int intenger_field = atoi(criteria[i].field_value);
+
+			if(strcmp(criteria[i].field_name, "codEstacao") == 0){
+				if(intenger_field != bin_record->station_code) return -1;
+			} else if(strcmp(criteria[i].field_name, "codLinha") == 0){
+				if(intenger_field != bin_record->line_code) return -1;
+			} else if(strcmp(criteria[i].field_name, "codProxEstacao") == 0){
+				if(intenger_field != bin_record->next_station_code) return -1;
+			} else if(strcmp(criteria[i].field_name, "distProxEstacao") == 0){
+				if(intenger_field != bin_record->next_station_distance) return -1;
+			} else if(strcmp(criteria[i].field_name, "codLinhaIntegra") == 0){
+				if(intenger_field != bin_record->line_integration_code) return -1;
+			} else if(strcmp(criteria[i].field_name, "codEstIntegra") == 0){
+				if(intenger_field != bin_record->station_integration_code) return -1;
+			} else{
+				return -1;
+			}
+		}
+	}
+
+	return 0;
+}
+
 Record* read_record_RRN(char* filename, int RRN) {
 	FILE* file = fopen(filename, READ_BINARY_MODE);
 
