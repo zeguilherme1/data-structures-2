@@ -36,7 +36,7 @@ Record* new_record();
 int search_rrn();
 
 int write_record(char *filename, Record* new_record);
-
+char* my_strdup(const char* str);
 Record* tokenize_record(char *buffer);
 void save_record_to_bin(FILE* bin_filename, Record* new_record);
 void save_record(FILE* bin_filename, Record* new_record);

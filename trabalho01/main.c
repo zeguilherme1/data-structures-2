@@ -28,6 +28,7 @@ int main() {
 			bin_to_text();		
 			break;
 		case SEQUENCIAL_SEARCH:
+			criteria_search();
 			break;
 		case RRN_SEARCH:
 			search_rrn();

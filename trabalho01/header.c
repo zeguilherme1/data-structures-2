@@ -40,7 +40,6 @@ void save_header(FILE* bin_file, Header* header) {
     */
 
    rewind(bin_file);
-
    fwrite(&header->status, sizeof(char), 1, bin_file);
    fwrite(&header->top, sizeof(int), 1, bin_file);
    fwrite(&header->nextRRN, sizeof(int), 1, bin_file);

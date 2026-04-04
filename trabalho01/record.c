@@ -5,6 +5,8 @@
 #include "record.h"
 
 
+
+
 Record* new_record(){
     /*
         This function creates a new record and set up initial values
@@ -51,10 +53,15 @@ Record* tokenize_record(char *buffer) {
 	temp_record->station_code = integer_or_null(token);
 
 	token = strtok(NULL, ",");
+	token[strcspn(token, "\r\n")] = '\0';
 	temp_record->station_name = strdup(token);
 	temp_record->station_name_size = strlen(token);
 
+
 	token = strtok(NULL, ",");
+	temp_record->line_code = integer_or_null(token);
+	token = strtok(NULL, ",");
+	token[strcspn(token, "\r\n")] = '\0';
 	temp_record->line_name = strdup(token);
 	temp_record->line_name_size = strlen(token);
 	
@@ -250,6 +257,16 @@ Record* read_rrn_record(FILE* bin_file, int rrn) {
 	Record *find_record = (Record*)malloc(sizeof(Record));
 	if(find_record == NULL) return NULL;
 
+	char removido;
+	fread(&removido, sizeof(char), 1, bin_file);
+
+	find_record->removed = removido;
+
+	if(removido == '1') {
+		free(find_record);
+		return NULL;
+	}
+
 	fread(&find_record->next_record, sizeof(int), 1, bin_file);
 	fread(&find_record->station_code, sizeof(int), 1, bin_file);
 	fread(&find_record->line_code, sizeof(int), 1, bin_file);
@@ -263,13 +280,13 @@ Record* read_rrn_record(FILE* bin_file, int rrn) {
 	if(find_record->station_name_size > 0){
 		find_record->station_name = (char*)calloc(find_record->station_name_size, sizeof(char));
 	}
-	fread(&find_record->station_name, sizeof(char), find_record->station_name_size, bin_file);
+	fread(find_record->station_name, sizeof(char), find_record->station_name_size, bin_file);
 	
 	fread(&find_record->line_name_size, sizeof(int), 1, bin_file);
 	if(find_record->line_name_size > 0){
 		find_record->line_name = (char*)calloc(find_record->line_name_size, sizeof(char));
 	}
-	fread(&find_record->line_name, sizeof(char), find_record->line_name_size, bin_file);
+	fread(find_record->line_name, sizeof(char), find_record->line_name_size, bin_file);
 
 
 	return find_record;
@@ -307,4 +324,6 @@ int search_rrn() {
 	if(bin_header == NULL) return MALLOC_ERROR;
 
 	Record *result_record = read_rrn_record(bin_file, rrn);
+
+	print_record(result_record);
 }

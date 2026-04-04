@@ -7,8 +7,48 @@
 
 
 
+
+void BinarioNaTela(char *arquivo) {
+    FILE *fs;
+    if (arquivo == NULL || !(fs = fopen(arquivo, "rb"))) {
+        fprintf(stderr,
+                "ERRO AO ESCREVER O BINARIO NA TELA (função binarioNaTela): "
+                "não foi possível abrir o arquivo que me passou para leitura. "
+                "Ele existe e você tá passando o nome certo? Você lembrou de "
+                "fechar ele com fclose depois de usar?\n");
+        return;
+    }
+
+    fseek(fs, 0, SEEK_END);
+    size_t fl = ftell(fs);
+
+    fseek(fs, 0, SEEK_SET);
+    unsigned char *mb = (unsigned char *)malloc(fl);
+    fread(mb, 1, fl, fs);
+
+    unsigned long cs = 0;
+    for (unsigned long i = 0; i < fl; i++) {
+        cs += (unsigned long)mb[i];
+    }
+
+    printf("%lf\n", (cs / (double)100));
+
+    free(mb);
+    fclose(fs);
+}
+
+
+
 int integer_or_null(char* str) {
-    return str == NULL || strcspn(str, "\n\r") == 0 ? -1 : atoi(str);
+    if(str == NULL) return -1;
+
+    // remove \n e \r
+    str[strcspn(str, "\r\n")] = '\0';
+
+    // string vazia
+    if(str[0] == '\0') return -1;
+
+    return atoi(str);
 }
 
 int csv_to_bin() {
@@ -18,6 +58,11 @@ int csv_to_bin() {
 	scanf("%s %s", csv_filename, bin_filename);
 	FILE *csv_file = fopen(csv_filename, "r");
 	FILE *bin_file = fopen(bin_filename, WRITE_BINARY_MODE);
+
+	if(!csv_file || !bin_file) {
+		printf("Falha no processamento do arquivo.");
+		return 0;
+	}
 
 	Header* temp_header = new_header();
 
@@ -48,7 +93,7 @@ int csv_to_bin() {
 	temp_header->nextRRN = record_counter;
 
 	save_header(bin_file, temp_header);
-
+	BinarioNaTela(bin_filename);
 	return SUCCESS;
 }
 
@@ -215,6 +260,7 @@ int criteria_search(){
 					int ret_matches = matches_record_criteria(temp_record, criteria, num_fields);
 					if(ret_matches == 0){
 						print_record(temp_record);
+						printf("\n");
 						found = 1;
 					}
 				} 

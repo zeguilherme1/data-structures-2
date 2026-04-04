@@ -16,7 +16,7 @@ int bin_to_text();
 int integer_or_null(char* str);
 void ScanQuoteString(char *str);
 int criteria_search();
-
+void BinarioNaTela(char *arquivo);
 typedef struct criteria {
 	char field_name[50];
     char field_value[50];
