@@ -13,6 +13,7 @@
 
 int csv_to_bin();
 int bin_to_text();
+int read_rrn_record(char* bin_filename, int rrn);
 int integer_or_null(char* str);
 void ScanQuoteString(char *str);
 int criteria_search();

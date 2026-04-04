@@ -48,6 +48,20 @@ void save_header(FILE* bin_file, Header* header) {
    fwrite(&header->station_pairs_num, sizeof(int), 1, bin_file);
 }
 
+Header* read_binary_header(FILE* bin_file) {
+    Header* bin_header = new_header();
+
+    if(bin_header == NULL) return NULL;
+
+    fread(&bin_header->status, sizeof(char), 1, bin_file);
+    fread(&bin_header->top, sizeof(int), 1, bin_file);
+    fread(&bin_header->nextRRN, sizeof(int), 1, bin_file);
+    fread(&bin_header->station_num, sizeof(int), 1, bin_file);
+    fread(&bin_header->station_pairs_num, sizeof(int), 1 , bin_file);
+
+    return bin_header;
+}
+
 int read_header(FILE* bin_file, Header* bin_header){
     /*
         This function confirm the if header was successful read

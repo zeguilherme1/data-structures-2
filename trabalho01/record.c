@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include "header.h"
 #include "utils.h"
 #include "record.h"
 
@@ -262,3 +263,17 @@ void free_record(Record** temp_record) {
 	*temp_record = NULL;
 }
 
+int search_rrn() {
+	char bin_filename[100];
+	int rrn;
+
+	scanf("%s %d", bin_filename, &rrn);
+
+	FILE* bin_file = fopen(bin_filename, READ_BINARY_MODE);
+	
+	Header* bin_header = read_binary_header(bin_file);
+
+	if(bin_header == NULL) return MALLOC_ERROR;
+
+	Record *result_record = read_record_RRN(bin_file, rrn);
+}

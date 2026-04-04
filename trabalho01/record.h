@@ -32,6 +32,7 @@ typedef struct record {
 } Record;
 
 Record* new_record();
+int search_rrn();
 
 int write_record(char *filename, Record* new_record);
 

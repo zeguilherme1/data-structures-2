@@ -8,6 +8,8 @@ enum functions {
 	EXIT,
 	CSV_TO_BINARY,
 	PRINT_BINARY,
+	SEQUENCIAL_SEARCH,
+	RRN_SEARCH
 } Functions;
 
 int main() {
@@ -24,6 +26,11 @@ int main() {
 			break;
 		case PRINT_BINARY:
 			bin_to_text();		
+			break;
+		case SEQUENCIAL_SEARCH:
+			break;
+		case RRN_SEARCH:
+			search_rrn();
 			break;
 	}
 	

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "record.h"
 #include "header.h"
 #include "utils.h"
@@ -100,11 +101,10 @@ int bin_to_text(){
     return SUCCESS;
 }
 
-void ScanQuoteString(char *str) {
+void scan_quote_string(char *str) {
     char R;
 
-    while ((R = getchar()) != EOF && isspace(R))
-        ; // ignorar espaços, \r, \n...
+    while ((R = getchar()) != EOF && isspace(R)); // ignorar espaços, \r, \n...
 
     if (R == 'N' || R == 'n') { // campo NULO
         getchar();
@@ -125,8 +125,7 @@ void ScanQuoteString(char *str) {
         strcpy(str, "");
     }
 }
-
-
+	
 int criteria_search(){
 	char bin_filename[100];
 	scanf("%s", bin_filename);
@@ -164,7 +163,7 @@ int criteria_search(){
 		for(int j = 0; j < num_fiels; j++){
 			scanf("%s", criteria[j].field_name);
 			if(strcmp(criteria[j].field_name, "nomeEstacao") == 0 || strcmp(criteria[j].field_name, "nomeLinha") == 0){
-				ScanQuoteString(criteria[j].field_value);
+				scan_quote_string(criteria[j].field_value);
 			} else {
 				scanf("%s", criteria[j].field_value);
 			}		
@@ -198,4 +197,44 @@ int criteria_search(){
 		fclose(bin_file);
 	}
 	return 0;
+}
+
+int read_rrn_record(char* bin_filename, int rrn) {
+	// calcula o byteoffset
+	// move o ponteiro usando fseek
+	// le os campos fixos do registro
+	// le os campos variaveis
+
+
+	FILE* bin_file = fopen(bin_filename, READ_BINARY_MODE);
+
+	int byte_offset = (HEADER_SIZE + (RECORD_SIZE * rrn));
+	fseek(bin_file, byte_offset, SEEK_SET);
+
+	Record *find_record = (Record*)malloc(sizeof(Record));
+	if(find_record == NULL) return MALLOC_ERROR;
+
+	fread(&find_record->next_record, sizeof(int), 1, bin_file);
+	fread(&find_record->station_code, sizeof(int), 1, bin_file);
+	fread(&find_record->line_code, sizeof(int), 1, bin_file);
+	fread(&find_record->next_station_code, sizeof(int), 1, bin_file);
+	fread(&find_record->next_station_distance, sizeof(int), 1, bin_file);
+	fread(&find_record->line_integration_code, sizeof(int), 1, bin_file);
+	fread(&find_record->station_integration_code, sizeof(int), 1, bin_file);
+
+
+	fread(&find_record->station_name_size, sizeof(int), 1, bin_file);
+	if(find_record->station_name_size > 0){
+		find_record->station_name = (char*)calloc(find_record->station_name_size, sizeof(char));
+	}
+	fread(&find_record->station_name, sizeof(char), find_record->station_name_size, bin_file);
+	
+	fread(&find_record->line_name_size, sizeof(int), 1, bin_file);
+	if(find_record->line_name_size > 0){
+		find_record->line_name = (char*)calloc(find_record->line_name_size, sizeof(char));
+	}
+	fread(&find_record->line_name, sizeof(char), find_record->line_name_size, bin_file);
+
+
+	return find_record;
 }
