@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <strings.h>
 #include "header.h"
+#include "utils.h"
 
 // we are using record instead of "register"
 // because register is a reserved keyword in C
@@ -43,6 +44,6 @@ int read_record(FILE* bin_file, Record* bin_record);
 void print_record(Record* bin_record);
 void free_record(Record** temp_record);
 int matches_record_criteria(Record* bin_record, Search_criteria* criteria, int num_fields);
-Record* read_record_RRN(char* filename, int RRN);
+Record* read_rrn_record(FILE* bin_file, int rrn);
 
 #endif

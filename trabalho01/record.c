@@ -236,14 +236,45 @@ int matches_record_criteria(Record* bin_record, Search_criteria* criteria, int n
 	return SUCCESS;
 }
 
-Record* read_record_RRN(char* filename, int RRN) {
-	FILE* file = fopen(filename, READ_BINARY_MODE);
+Record* read_rrn_record(FILE* bin_file, int rrn) {
+	// calcula o byteoffset
+	// move o ponteiro usando fseek
+	// le os campos fixos do registro
+	// le os campos variaveis
 
 
-	fclose(file);
-	return SUCCESS;
+	
+	int byte_offset = (HEADER_SIZE + (RECORD_SIZE * rrn));
+	fseek(bin_file, byte_offset, SEEK_SET);
 
+	Record *find_record = (Record*)malloc(sizeof(Record));
+	if(find_record == NULL) return NULL;
+
+	fread(&find_record->next_record, sizeof(int), 1, bin_file);
+	fread(&find_record->station_code, sizeof(int), 1, bin_file);
+	fread(&find_record->line_code, sizeof(int), 1, bin_file);
+	fread(&find_record->next_station_code, sizeof(int), 1, bin_file);
+	fread(&find_record->next_station_distance, sizeof(int), 1, bin_file);
+	fread(&find_record->line_integration_code, sizeof(int), 1, bin_file);
+	fread(&find_record->station_integration_code, sizeof(int), 1, bin_file);
+
+
+	fread(&find_record->station_name_size, sizeof(int), 1, bin_file);
+	if(find_record->station_name_size > 0){
+		find_record->station_name = (char*)calloc(find_record->station_name_size, sizeof(char));
+	}
+	fread(&find_record->station_name, sizeof(char), find_record->station_name_size, bin_file);
+	
+	fread(&find_record->line_name_size, sizeof(int), 1, bin_file);
+	if(find_record->line_name_size > 0){
+		find_record->line_name = (char*)calloc(find_record->line_name_size, sizeof(char));
+	}
+	fread(&find_record->line_name, sizeof(char), find_record->line_name_size, bin_file);
+
+
+	return find_record;
 }
+
 
 void free_record(Record** temp_record) {
 	if(!temp_record) return;
@@ -275,5 +306,5 @@ int search_rrn() {
 
 	if(bin_header == NULL) return MALLOC_ERROR;
 
-	Record *result_record = read_record_RRN(bin_file, rrn);
+	Record *result_record = read_rrn_record(bin_file, rrn);
 }
