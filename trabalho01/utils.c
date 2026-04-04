@@ -260,13 +260,13 @@ int criteria_search(){
 					int ret_matches = matches_record_criteria(temp_record, criteria, num_fields);
 					if(ret_matches == 0){
 						print_record(temp_record);
-						printf("\n");
 						found = 1;
 					}
 				} 
 				free_record(&temp_record);
 			}
 		}
+		if(i < comparaton_num - 1) printf("\n");
 		if(found == 0) printf("Registro inexistente.\n"); 
 		free(temp_header);
 		fclose(bin_file);
