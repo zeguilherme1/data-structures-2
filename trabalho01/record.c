@@ -123,14 +123,14 @@ int write_record(char* filename, Record* new_record) {
 
 int read_record(FILE* bin_file, Record* bin_record){
 	/*
-        This function confirm if the record was successful read
+        This function confirms if the record was successfully read
 
         Args:
             (FILE*) bin_file: binary input file
             (Record*) bin_record: the record struct that will be read
 
         Return:
-            0 for sucess and -1 for fail
+            0 for success and -1 for fail
     
     */
    	if(bin_file == NULL) return NO_DATA_ERROR;
@@ -193,40 +193,40 @@ void print_record(Record* bin_record){
 	printf("\n");
 }
 
-int matches_record_criteria(Record* bin_record, Search_criteria* criteria, int num_fiels){
+int matches_record_criteria(Record* bin_record, Search_criteria* criteria, int num_fields){
 	/*
-        This function confirm if the record was successful compared with the criteria
+        This function confirms if the record was successfully compared with the criteria
 
         Args:
             (Record*) bin_record: the record struct to be compared
-			(Search_criteria*) criteria: the criteria struct that will be comparision parameter
+			(Search_criteria*) criteria: the criteria struct that will be comparison parameter
 			int num_fields: the number of fields to be compared
         
 		Return:
-            0 for sucess and -1 for fail
+            0 for success and -1 for fail
     
     */
 
-	for(int i = 0; i < num_fiels; i++){
+	for(int i = 0; i < num_fields; i++){
 		if(strcmp(criteria[i].field_name, "nomeEstacao") == 0){
 			if(strcmp(criteria[i].field_value, bin_record->station_name) != 0) return -1;
 		} else if(strcmp(criteria[i].field_name, "nomeLinha") == 0){
 			if(strcmp(criteria[i].field_value, bin_record->line_name) != 0) return -1;
 		} else {
-			int intenger_field = atoi(criteria[i].field_value);
+			int integer_field = atoi(criteria[i].field_value);
 
 			if(strcmp(criteria[i].field_name, "codEstacao") == 0){
-				if(intenger_field != bin_record->station_code) return -1;
+				if(integer_field != bin_record->station_code) return -1;
 			} else if(strcmp(criteria[i].field_name, "codLinha") == 0){
-				if(intenger_field != bin_record->line_code) return -1;
+				if(integer_field != bin_record->line_code) return -1;
 			} else if(strcmp(criteria[i].field_name, "codProxEstacao") == 0){
-				if(intenger_field != bin_record->next_station_code) return -1;
+				if(integer_field != bin_record->next_station_code) return -1;
 			} else if(strcmp(criteria[i].field_name, "distProxEstacao") == 0){
-				if(intenger_field != bin_record->next_station_distance) return -1;
+				if(integer_field != bin_record->next_station_distance) return -1;
 			} else if(strcmp(criteria[i].field_name, "codLinhaIntegra") == 0){
-				if(intenger_field != bin_record->line_integration_code) return -1;
+				if(integer_field != bin_record->line_integration_code) return -1;
 			} else if(strcmp(criteria[i].field_name, "codEstIntegra") == 0){
-				if(intenger_field != bin_record->station_integration_code) return -1;
+				if(integer_field != bin_record->station_integration_code) return -1;
 			} else{
 				return -1;
 			}

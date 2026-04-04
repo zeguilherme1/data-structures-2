@@ -53,6 +53,17 @@ int csv_to_bin() {
 }
 
 int bin_to_text(){
+	/*
+        This function reads the binary file and print it, 
+		formatting if there are null fields.
+
+        Args:
+            No args.
+
+        Return:
+            0 for success and -1 for failure
+    
+    */
 
 	char bin_filename[100];
 	scanf("%s", bin_filename);
@@ -68,7 +79,7 @@ int bin_to_text(){
     
     if(temp_header == NULL) return MALLOC_ERROR;
 
-    int ret_header = read_header(bin_file, temp_header);
+    int ret_header = read_header(bin_file, temp_header); // reads the header to skip its bytes
     
     if(ret_header == -1){
         free(temp_header);
@@ -81,16 +92,18 @@ int bin_to_text(){
 
     while(1){
         Record* temp_record = new_record();
-		int ret_record = read_record(bin_file, temp_record);
+		int ret_record = read_record(bin_file, temp_record); // sequentially reads the record 
 		if(ret_record == -1){
 			free_record(&temp_record);
-			if(feof(bin_file)) break;
+			if(feof(bin_file)) break; // checks if the end of file was reached
 			else {
 				printf("Falha no processamento do arquivo.\n");
-				break;
+				free(temp_header);
+				fclose(bin_file);
+				return -1;
 			}
 		} else{
-			if(temp_record->removed != '1') print_record(temp_record);
+			if(temp_record->removed == '0') print_record(temp_record); // if it was not removed, prints it
 			free_record(&temp_record);
 		}
     }
@@ -127,14 +140,28 @@ void scan_quote_string(char *str) {
 }
 	
 int criteria_search(){
+	/*
+        This function reads the file and the n numbers of searches each with m criteria fields. 
+		So it reads every record and checks if the record field is equal to the given criteria, 
+		if it is, then the record is printed. 
+		If no correspondence is found for a given search, a "not found" message is printed.
+
+        Args:
+            No args.
+
+        Return:
+            0 for success and -1 for failure
+    
+    */
+
 	char bin_filename[100];
 	scanf("%s", bin_filename);
 
-	int comparaton_num; //n
+	int comparaton_num; //n number of searches
 	scanf("%d", &comparaton_num);
 
 	for(int i = 0; i < comparaton_num; i++){
-		FILE *bin_file = fopen(bin_filename, READ_BINARY_MODE);
+		FILE *bin_file = fopen(bin_filename, READ_BINARY_MODE); //the file is opened and closed at every iteration 
 
     	if(!bin_file){
         	printf("Falha no processamento do arquivo.\n");
@@ -145,7 +172,7 @@ int criteria_search(){
     
 		if(temp_header == NULL) return MALLOC_ERROR;
 
-		int ret_header = read_header(bin_file, temp_header);
+		int ret_header = read_header(bin_file, temp_header); // reads the header to skip its bytes
 		
 		if(ret_header == -1){
 			free(temp_header);
@@ -155,15 +182,15 @@ int criteria_search(){
 			return -1;
 		}
 		
-		int num_fiels; // m
-		scanf("%d", &num_fiels);
+		int num_fields; // m number of criteria fields
+		scanf("%d", &num_fields);
 
-		Search_criteria criteria[num_fiels];
+		Search_criteria criteria[num_fields]; //array of structs to store the field name and value
 
-		for(int j = 0; j < num_fiels; j++){
+		for(int j = 0; j < num_fields; j++){
 			scanf("%s", criteria[j].field_name);
 			if(strcmp(criteria[j].field_name, "nomeEstacao") == 0 || strcmp(criteria[j].field_name, "nomeLinha") == 0){
-				scan_quote_string(criteria[j].field_value);
+				scan_quote_string(criteria[j].field_value); // if it is a string, removes the surrounding quotes from input
 			} else {
 				scanf("%s", criteria[j].field_value);
 			}		
@@ -174,16 +201,18 @@ int criteria_search(){
 		while(1){
 			Record* temp_record = new_record();
 			int ret_record = read_record(bin_file, temp_record);
-			if(ret_record == -1){
-				free_record(&temp_record);
-				if(feof(bin_file)) break;
+			if(ret_record == -1){ 
+				free_record(&temp_record); 
+				if(feof(bin_file)) break; // checks if the end of file was reached
 				else {
 					printf("Falha no processamento do arquivo.\n");
+					free(temp_header);
+					fclose(bin_file);
 					return -1;
 				}
 			} else{
-				if(temp_record->removed != TRUE){
-					int ret_matches = matches_record_criteria(temp_record, criteria, num_fiels);
+				if(temp_record->removed == '0'){ //if the record isn't removed, checks if it matches the criteria and prints it
+					int ret_matches = matches_record_criteria(temp_record, criteria, num_fields);
 					if(ret_matches == 0){
 						print_record(temp_record);
 						found = 1;
@@ -192,7 +221,7 @@ int criteria_search(){
 				free_record(&temp_record);
 			}
 		}
-		if(found == 0) printf("Registro inexistente.\n");
+		if(found == 0) printf("Registro inexistente.\n"); 
 		free(temp_header);
 		fclose(bin_file);
 	}

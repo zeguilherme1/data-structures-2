@@ -71,7 +71,7 @@ int read_header(FILE* bin_file, Header* bin_header){
             (Header*) header: the header struct that will be read
 
         Return:
-            0 for sucess and -1 for fail
+            0 for success and -1 for fail
     
     */
 
