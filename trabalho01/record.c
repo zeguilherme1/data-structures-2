@@ -18,7 +18,7 @@ Record* new_record(){
 
 Record* new_record = (Record*)malloc(sizeof(Record));
 
-    if(!new_record) {
+    if(new_record == NULL) {
         return NULL;
     }
 
@@ -42,7 +42,7 @@ Record* new_record = (Record*)malloc(sizeof(Record));
 Record* tokenize_record(char *buffer) {
 	Record* temp_record = (Record*)malloc(sizeof(Record));
 
-	if(!temp_record) {
+	if(temp_record == NULL) {
 		return NULL;
 	}
 
@@ -90,7 +90,7 @@ void save_record_to_bin(FILE* bin_filename, Record* new_record) {
 
 	long record_end = ftell(bin_filename);
 
-	int remain_bytes = record_SIZE - (record_end - record_begin);
+	int remain_bytes = RECORD_SIZE - (record_end - record_begin);
 
 	if(remain_bytes > 0) {
 		char empty = '$';
@@ -117,7 +117,7 @@ int write_record(char* filename, Record* new_record) {
 	// todo: implement the complete function
 	
 	fclose(file);
-	return 0;
+	return SUCCESS;
 }
 
 int read_record(FILE* bin_file, Record* bin_record){
@@ -132,8 +132,8 @@ int read_record(FILE* bin_file, Record* bin_record){
             0 for sucess and -1 for fail
     
     */
-   	if(!bin_file) return -1;
-	if(!bin_record) return -1;
+   	if(bin_file == NULL) return NO_DATA_ERROR;
+	if(bin_record == NULL) return NO_DATA_ERROR;
 
     int verify = 0;
 
@@ -149,14 +149,14 @@ int read_record(FILE* bin_file, Record* bin_record){
 	verify += fread(&bin_record->station_name_size, sizeof(int), 1, bin_file);
 	if(bin_record->station_name_size > 0){
 		bin_record->station_name = malloc(bin_record->station_name_size);
-		if(bin_record->station_name == NULL) return -1;
+		if(bin_record->station_name == NULL) return NO_DATA_ERROR;
 		verify += fread(bin_record->station_name, sizeof(char), bin_record->station_name_size, bin_file);
 	}
 	
 	verify += fread(&bin_record->line_name_size, sizeof(int), 1, bin_file);
 	if(bin_record->line_name_size > 0){
 		bin_record->line_name = malloc(bin_record->line_name_size);
-		if(bin_record->line_name == NULL) return -1;
+		if(bin_record->line_name == NULL) return NO_DATA_ERROR;
 		verify += fread(bin_record->line_name, sizeof(char), (bin_record->line_name_size), bin_file);
 	}
 
@@ -232,7 +232,7 @@ int matches_record_criteria(Record* bin_record, Search_criteria* criteria, int n
 		}
 	}
 
-	return 0;
+	return SUCCESS;
 }
 
 Record* read_record_RRN(char* filename, int RRN) {
@@ -240,7 +240,7 @@ Record* read_record_RRN(char* filename, int RRN) {
 
 
 	fclose(file);
-	return 0;
+	return SUCCESS;
 
 }
 

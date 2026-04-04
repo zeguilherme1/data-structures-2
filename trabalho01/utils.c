@@ -20,7 +20,7 @@ int csv_to_bin() {
 
 	Header* temp_header = new_header();
 
-	if(!temp_header) return -1;
+	if(temp_header == NULL) return MALLOC_ERROR;
 
 	save_header(bin_file, temp_header);
 	
@@ -32,9 +32,9 @@ int csv_to_bin() {
 	while(fgets(buffer, sizeof(buffer), csv_file)) {
 		Record *new_record = tokenize_record(buffer);
 
-		if(new_record == NULL) return -1;
+		if(new_record == NULL) return MALLOC_ERROR;
 
-		new_record->removed = '0';
+		new_record->removed = FALSE;
 		new_record->next_record = temp_header->top;
 
 		save_record_to_bin(bin_file, new_record);
@@ -43,12 +43,12 @@ int csv_to_bin() {
 		free_record(&new_record);
 	}
 
-	temp_header->status = '0';
+	temp_header->status = FALSE;
 	temp_header->nextRRN = record_counter;
 
 	save_header(bin_file, temp_header);
 
-	return 0;
+	return SUCCESS;
 }
 
 int bin_to_text(){
@@ -65,7 +65,7 @@ int bin_to_text(){
 
     Header* temp_header = new_header();
     
-    if(!temp_header) return -1;
+    if(temp_header == NULL) return MALLOC_ERROR;
 
     int ret_header = read_header(bin_file, temp_header);
     
@@ -97,7 +97,7 @@ int bin_to_text(){
 	free(temp_header);
     fclose(bin_file);
 
-    return 0;
+    return SUCCESS;
 }
 
 void ScanQuoteString(char *str) {
@@ -144,7 +144,7 @@ int criteria_search(){
 		
 		Header* temp_header = new_header();
     
-		if(!temp_header) return -1;
+		if(temp_header == NULL) return MALLOC_ERROR;
 
 		int ret_header = read_header(bin_file, temp_header);
 		
@@ -156,7 +156,7 @@ int criteria_search(){
 			return -1;
 		}
 		
-		int num_fiels; //m
+		int num_fiels; // m
 		scanf("%d", &num_fiels);
 
 		Search_criteria criteria[num_fiels];
@@ -183,7 +183,7 @@ int criteria_search(){
 					return -1;
 				}
 			} else{
-				if(temp_record->removed != '1'){
+				if(temp_record->removed != TRUE){
 					int ret_matches = matches_record_criteria(temp_record, criteria, num_fiels);
 					if(ret_matches == 0){
 						print_record(temp_record);

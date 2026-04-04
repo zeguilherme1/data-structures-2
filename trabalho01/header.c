@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "header.h"
+#include "utils.h"
 
 Header* new_header() {
     /*
@@ -15,7 +16,7 @@ Header* new_header() {
 
     Header* new_header = (Header*)malloc(sizeof(Header));
 
-    if(!new_header) {
+    if(new_header == NULL) {
         return NULL;
     }
 
@@ -60,8 +61,8 @@ int read_header(FILE* bin_file, Header* bin_header){
     
     */
 
-    if(!bin_file) return -1;
-    if(!bin_header) return -1;
+    if(bin_file == NULL) return NO_DATA_ERROR;
+    if(bin_header == NULL) return NO_DATA_ERROR;
 
     int verify = 0;
 
