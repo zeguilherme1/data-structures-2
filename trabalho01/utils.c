@@ -266,8 +266,8 @@ int criteria_search(){
 				free_record(&temp_record);
 			}
 		}
-		if(i < comparaton_num - 1) printf("\n");
 		if(found == 0) printf("Registro inexistente.\n"); 
+		if(i < comparaton_num - 1) printf("\n");
 		free(temp_header);
 		fclose(bin_file);
 	}

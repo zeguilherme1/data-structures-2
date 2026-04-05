@@ -31,6 +31,7 @@ Record *new_record()
 	new_record->next_station_code = -1;
 	new_record->next_station_distance = -1;
 	new_record->line_integration_code = -1;
+	new_record->station_integration_code = -1;
 	new_record->station_code = -1;
 	new_record->station_name_size = 0;
 	new_record->station_name = NULL;
@@ -288,9 +289,7 @@ int matches_record_criteria(Record *bin_record, Search_criteria *criteria, int n
 		} else if (strcmp(criteria[i].field_name, "codEstIntegra") == 0){
 			ret_match = matches_integer(criteria[i].field_value, bin_record->station_integration_code);
 			if (ret_match) return -1;
-		} else{
-			return -1;
-		}
+		} 
 	}
 
 	return SUCCESS;
