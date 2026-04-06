@@ -206,7 +206,7 @@ int criteria_search(){
 	scanf("%d", &comparaton_num);
 
 	for(int i = 0; i < comparaton_num; i++){
-		FILE *bin_file = fopen(bin_filename, READ_BINARY_MODE); //the file is opened and closed at every iteration 
+		FILE *bin_file = fopen(bin_filename, READ_BINARY_MODE); // the file is opened and closed at every iteration 
 
     	if(!bin_file){
         	printf("Falha no processamento do arquivo.\n");
@@ -230,7 +230,7 @@ int criteria_search(){
 		int num_fields; // m number of criteria fields
 		scanf("%d", &num_fields);
 
-		Search_criteria criteria[num_fields]; //array of structs to store the field name and value
+		Search_criteria criteria[num_fields]; // array of structs to store the field name and value
 
 		for(int j = 0; j < num_fields; j++){
 			scanf("%s", criteria[j].field_name);
@@ -242,6 +242,7 @@ int criteria_search(){
     	}
 
 		int found = 0;
+		
 
 		while(1){
 			Record* temp_record = new_record();

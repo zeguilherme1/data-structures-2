@@ -136,21 +136,7 @@ int write_record(char *filename, Record *new_record)
 
 int read_record(FILE *bin_file, Record *bin_record)
 {
-	/*
-		This function confirms if the record was successfully read
-
-		Args:
-			(FILE*) bin_file: binary input file
-			(Record*) bin_record: the record struct that will be read
-
-		Return:
-			0 for success and -1 for fail
-
-	*/
-	if (bin_file == NULL)
-		return NO_DATA_ERROR;
-	if (bin_record == NULL)
-		return NO_DATA_ERROR;
+	if (bin_file == NULL || bin_record == NULL) return NO_DATA_ERROR;
 
 	int verify = 0;
 
@@ -163,32 +149,38 @@ int read_record(FILE *bin_file, Record *bin_record)
 	verify += fread(&bin_record->line_integration_code, sizeof(int), 1, bin_file);
 	verify += fread(&bin_record->station_integration_code, sizeof(int), 1, bin_file);
 
+
 	verify += fread(&bin_record->station_name_size, sizeof(int), 1, bin_file);
-	if (bin_record->station_name_size > 0)
-	{
-		bin_record->station_name = malloc(bin_record->station_name_size);
-		if (bin_record->station_name == NULL)
-			return NO_DATA_ERROR;
+	if(bin_record->station_name_size > 0) {
+		bin_record->station_name = malloc(bin_record->station_name_size + 1);
+		if (bin_record->station_name == NULL) return NO_DATA_ERROR;
+
 		verify += fread(bin_record->station_name, sizeof(char), bin_record->station_name_size, bin_file);
+
+		bin_record->station_name[bin_record->station_name_size] = '\0';
+	} else {
+		bin_record->station_name = NULL;
 	}
 
 	verify += fread(&bin_record->line_name_size, sizeof(int), 1, bin_file);
-	if (bin_record->line_name_size > 0)
-	{
-		bin_record->line_name = malloc(bin_record->line_name_size);
-		if (bin_record->line_name == NULL)
-			return NO_DATA_ERROR;
-		verify += fread(bin_record->line_name, sizeof(char), (bin_record->line_name_size), bin_file);
+	if(bin_record->line_name_size > 0){
+		bin_record->line_name = malloc(bin_record->line_name_size + 1);
+		if (bin_record->line_name == NULL) return NO_DATA_ERROR;
+		verify += fread(bin_record->line_name, sizeof(char), bin_record->line_name_size, bin_file);
+
+		bin_record->line_name[bin_record->line_name_size] = '\0';
+	}else {
+		bin_record->line_name = NULL;
 	}
 
 	char trash[43];
 	int trash_size = 43 - bin_record->station_name_size - bin_record->line_name_size;
-	fread(trash, sizeof(char), trash_size, bin_file);
 
-	if (verify == 10 + bin_record->station_name_size + bin_record->line_name_size)
-		return 0;
-	else
-		return -1;
+	if(trash_size > 0) fread(trash, sizeof(char), trash_size, bin_file);
+
+	if(verify == 10 + bin_record->station_name_size + bin_record->line_name_size) return 0;
+
+	return -1;
 }
 
 void print_int(int value)
@@ -232,13 +224,13 @@ int matches_string(char *criteria_value, char *field, int field_size){
 	}
 }
 
-int matches_integer(char *criteria_value, int field){
+int matches_integer(char *criteria_value, int record_field){
 	if (strcmp(criteria_value, "NULO") == 0){
-		if (field == -1) return 0;
+		if (record_field == -1) return 0;
 		else return -1;
 	} else{
 		int integer_field = atoi(criteria_value);
-		if (integer_field != field) return -1;
+		if (integer_field != record_field) return -1;
 		else return 0;
 	}
 }
