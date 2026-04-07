@@ -15,6 +15,7 @@ typedef struct header {
 } Header;
 
 Header* new_header();
+
 Header* read_binary_header(FILE* bin_file);
 
 void save_header(FILE* bin_file, Header* bin_header);

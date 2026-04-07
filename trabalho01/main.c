@@ -1,3 +1,11 @@
+/*
+	Primeiro trabalho da disciplina Algoritmos e Estruturas de Dados II (SCC0503)
+	Realizado por:
+	- José Guilherme Santos Riberto (NUSP: 15647503)
+    - Letícia Adriana dos Santos (NUSP: 16882428)
+*/
+
+
 #include <stdio.h>
 #include <string.h>
 #include "record.h"

@@ -48,6 +48,15 @@ void save_header(FILE* bin_file, Header* header) {
 }
 
 Header* read_binary_header(FILE* bin_file) {
+    /*
+    This function reads the binary file header and stores the data in a Header struct.
+
+    Args:
+        (FILE*) bin_file: binary input file to read the header from
+        
+    Return:
+        (Header*) pointer to the populated Header struct, or NULL if allocation fails
+    */
     Header* bin_header = new_header();
 
     if(bin_header == NULL) return NULL;

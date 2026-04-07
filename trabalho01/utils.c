@@ -41,8 +41,6 @@ void BinarioNaTela(char *arquivo) {
     fclose(fs);
 }
 
-
-
 int integer_or_null(char* str) {
     if(str == NULL) return -1;
 
@@ -329,5 +327,24 @@ int criteria_search(){
 		fclose(bin_file);
 	}
 	return 0;
+}
+
+int search_rrn()
+{
+	char bin_filename[100];
+	int rrn;
+
+	scanf("%s %d", bin_filename, &rrn);
+
+	FILE *bin_file = fopen(bin_filename, READ_BINARY_MODE);
+
+	Header *bin_header = read_binary_header(bin_file);
+
+	if (bin_header == NULL)
+		return MALLOC_ERROR;
+
+	Record *result_record = read_rrn_record(bin_file, rrn);
+
+	print_record(result_record);
 }
 

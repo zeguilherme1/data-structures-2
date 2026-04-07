@@ -113,7 +113,6 @@ void save_record_to_bin(FILE *bin_file, Record *r)
     long end = ftell(bin_file);
     int written = end - start;
 
-    // 🔥 PROTEÇÃO CRÍTICA
     if (written > RECORD_SIZE) {
         printf("ERRO GRAVE: registro maior que RECORD_SIZE\n");
         exit(1);
@@ -139,18 +138,20 @@ void save_record(FILE *bin_filename, Record *new_record)
 	fwrite(&new_record->station_integration_code, sizeof(int), 1, bin_filename);
 }
 
-int write_record(char *filename, Record *new_record)
-{
-	FILE *file = fopen(filename, READ_BINARY_MODE);
-
-	// todo: implement the complete function
-
-	fclose(file);
-	return SUCCESS;
-}
-
 int read_record(FILE *bin_file, Record *bin_record)
 {
+	/*
+        This function confirms if the record was successfully read
+
+        Args:
+            (FILE*) bin_file: binary input file
+            (Record*) bin_record: the record struct that will be read
+
+        Return:
+            0 for success and -1 for fail
+    
+    */
+
 	if (bin_file == NULL || bin_record == NULL) return NO_DATA_ERROR;
 
 	int verify = 0;
@@ -372,23 +373,4 @@ void free_record(Record **temp_record)
 	free(*temp_record);
 
 	*temp_record = NULL;
-}
-
-int search_rrn()
-{
-	char bin_filename[100];
-	int rrn;
-
-	scanf("%s %d", bin_filename, &rrn);
-
-	FILE *bin_file = fopen(bin_filename, READ_BINARY_MODE);
-
-	Header *bin_header = read_binary_header(bin_file);
-
-	if (bin_header == NULL)
-		return MALLOC_ERROR;
-
-	Record *result_record = read_rrn_record(bin_file, rrn);
-
-	print_record(result_record);
 }

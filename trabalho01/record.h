@@ -32,18 +32,21 @@ typedef struct record {
 	char* line_name;
 } Record;
 
-Record* new_record();
-int search_rrn();
 
-int write_record(char *filename, Record* new_record);
-char* my_strdup(const char* str);
-Record* tokenize_record(char *buffer);
-void save_record_to_bin(FILE* bin_filename, Record* new_record);
-void save_record(FILE* bin_filename, Record* new_record);
+Record* new_record();
 int read_record(FILE* bin_file, Record* bin_record);
 void print_record(Record* bin_record);
 void free_record(Record** temp_record);
+
+//csv_to_bin() record functions
+Record* tokenize_record(char *buffer);
+void save_record_to_bin(FILE* bin_filename, Record* new_record);
+void save_record(FILE* bin_filename, Record* new_record);
+
+//criteria_search() record function
 int matches_record_criteria(Record* bin_record, Search_criteria* criteria, int num_fields);
+
+//search_rrn() record functions
 Record* read_rrn_record(FILE* bin_file, int rrn);
 
 #endif
