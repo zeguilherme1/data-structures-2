@@ -2,9 +2,8 @@
 	Primeiro trabalho da disciplina Algoritmos e Estruturas de Dados II (SCC0503)
 	Realizado por:
 	- José Guilherme Santos Riberto (NUSP: 15647503)
-    - Letícia Adriana dos Santos (NUSP: 16882428)
+	- Letícia Adriana dos Santos (NUSP: 16882428)
 */
-
 
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +11,8 @@
 #include "header.h"
 #include "utils.h"
 
-enum functions {
+enum functions
+{
 	EXIT,
 	CSV_TO_BINARY,
 	PRINT_BINARY,
@@ -20,31 +20,30 @@ enum functions {
 	RRN_SEARCH
 } Functions;
 
-int main() {
+int main()
+{
 
 	int option;
 	scanf("%d", &option);
 
-	switch(option) {
-		case EXIT:
-			return 0;
-			break;
-		case CSV_TO_BINARY:
-			csv_to_bin();
-			break;
-		case PRINT_BINARY:
-			bin_to_text();		
-			break;
-		case SEQUENCIAL_SEARCH:
-			criteria_search();
-			break;
-		case RRN_SEARCH:
-			search_rrn();
-			break;
+	switch (option)
+	{
+	case EXIT:
+		return 0;
+		break;
+	case CSV_TO_BINARY:
+		csv_to_bin();
+		break;
+	case PRINT_BINARY:
+		bin_to_text();
+		break;
+	case SEQUENCIAL_SEARCH:
+		criteria_search();
+		break;
+	case RRN_SEARCH:
+		search_rrn();
+		break;
 	}
-	
-
-	
 
 	return 0;
 }

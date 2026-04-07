@@ -2,7 +2,8 @@
 #include "header.h"
 #include "utils.h"
 
-Header* new_header() {
+Header *new_header()
+{
     /*
         This function creates a new header and set up initial values
 
@@ -11,12 +12,13 @@ Header* new_header() {
 
         Return:
             new_header: The generated header
-    
+
     */
 
-    Header* new_header = (Header*)malloc(sizeof(Header));
+    Header *new_header = (Header *)malloc(sizeof(Header));
 
-    if(new_header == NULL) {
+    if (new_header == NULL)
+    {
         return NULL;
     }
 
@@ -29,7 +31,8 @@ Header* new_header() {
     return new_header;
 }
 
-void save_header(FILE* bin_file, Header* header) {
+void save_header(FILE *bin_file, Header *header)
+{
     /*
         This function save a header struct to a binary file
 
@@ -39,38 +42,41 @@ void save_header(FILE* bin_file, Header* header) {
 
     */
 
-   rewind(bin_file);
-   fwrite(&header->status, sizeof(char), 1, bin_file);
-   fwrite(&header->top, sizeof(int), 1, bin_file);
-   fwrite(&header->nextRRN, sizeof(int), 1, bin_file);
-   fwrite(&header->station_num, sizeof(int), 1, bin_file);
-   fwrite(&header->station_pairs_num, sizeof(int), 1, bin_file);
+    rewind(bin_file);
+    fwrite(&header->status, sizeof(char), 1, bin_file);
+    fwrite(&header->top, sizeof(int), 1, bin_file);
+    fwrite(&header->nextRRN, sizeof(int), 1, bin_file);
+    fwrite(&header->station_num, sizeof(int), 1, bin_file);
+    fwrite(&header->station_pairs_num, sizeof(int), 1, bin_file);
 }
 
-Header* read_binary_header(FILE* bin_file) {
+Header *read_binary_header(FILE *bin_file)
+{
     /*
     This function reads the binary file header and stores the data in a Header struct.
 
     Args:
         (FILE*) bin_file: binary input file to read the header from
-        
+
     Return:
         (Header*) pointer to the populated Header struct, or NULL if allocation fails
     */
-    Header* bin_header = new_header();
+    Header *bin_header = new_header();
 
-    if(bin_header == NULL) return NULL;
+    if (bin_header == NULL)
+        return NULL;
 
     fread(&bin_header->status, sizeof(char), 1, bin_file);
     fread(&bin_header->top, sizeof(int), 1, bin_file);
     fread(&bin_header->nextRRN, sizeof(int), 1, bin_file);
     fread(&bin_header->station_num, sizeof(int), 1, bin_file);
-    fread(&bin_header->station_pairs_num, sizeof(int), 1 , bin_file);
+    fread(&bin_header->station_pairs_num, sizeof(int), 1, bin_file);
 
     return bin_header;
 }
 
-int read_header(FILE* bin_file, Header* bin_header){
+int read_header(FILE *bin_file, Header *bin_header)
+{
     /*
         This function confirm the if header was successful read
 
@@ -80,11 +86,13 @@ int read_header(FILE* bin_file, Header* bin_header){
 
         Return:
             0 for success and -1 for fail
-    
+
     */
 
-    if(bin_file == NULL) return NO_DATA_ERROR;
-    if(bin_header == NULL) return NO_DATA_ERROR;
+    if (bin_file == NULL)
+        return NO_DATA_ERROR;
+    if (bin_header == NULL)
+        return NO_DATA_ERROR;
 
     int verify = 0;
 
@@ -94,8 +102,8 @@ int read_header(FILE* bin_file, Header* bin_header){
     verify += fread(&bin_header->station_num, sizeof(int), 1, bin_file);
     verify += fread(&bin_header->station_pairs_num, sizeof(int), 1, bin_file);
 
-    if(verify == 5) return 0;
-    else return -1;
+    if (verify == 5)
+        return 0;
+    else
+        return -1;
 }
-
-
