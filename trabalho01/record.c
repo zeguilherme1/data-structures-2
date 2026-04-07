@@ -89,35 +89,41 @@ Record *tokenize_record(char *buffer)
     return temp_record;
 }
 
-void save_record_to_bin(FILE *bin_filename, Record *new_record)
+void save_record_to_bin(FILE *bin_file, Record *r)
 {
-	long record_begin = ftell(bin_filename);
+    long start = ftell(bin_file);
 
-	save_record(bin_filename, new_record);
+    fwrite(&r->removed, sizeof(char), 1, bin_file);
+    fwrite(&r->next_record, sizeof(int), 1, bin_file);
+    fwrite(&r->station_code, sizeof(int), 1, bin_file);
+    fwrite(&r->line_code, sizeof(int), 1, bin_file);
+    fwrite(&r->next_station_code, sizeof(int), 1, bin_file);
+    fwrite(&r->next_station_distance, sizeof(int), 1, bin_file);
+    fwrite(&r->line_integration_code, sizeof(int), 1, bin_file);
+    fwrite(&r->station_integration_code, sizeof(int), 1, bin_file);
 
-	fwrite(&new_record->station_name_size, sizeof(int), 1, bin_filename);
+    fwrite(&r->station_name_size, sizeof(int), 1, bin_file);
+    if (r->station_name_size > 0)
+        fwrite(r->station_name, 1, r->station_name_size, bin_file);
 
-	if (new_record->station_name_size > 0)
-	{
-		fwrite(new_record->station_name, sizeof(char), new_record->station_name_size, bin_filename);
-	}
+    fwrite(&r->line_name_size, sizeof(int), 1, bin_file);
+    if (r->line_name_size > 0)
+        fwrite(r->line_name, 1, r->line_name_size, bin_file);
 
-	fwrite(&new_record->line_name_size, sizeof(int), 1, bin_filename);
-	if (new_record->line_name_size > 0)
-	{
-		fwrite(new_record->line_name, sizeof(char), new_record->line_name_size, bin_filename);
-	}
+    long end = ftell(bin_file);
+    int written = end - start;
 
-	long record_end = ftell(bin_filename);
+    // 🔥 PROTEÇÃO CRÍTICA
+    if (written > RECORD_SIZE) {
+        printf("ERRO GRAVE: registro maior que RECORD_SIZE\n");
+        exit(1);
+    }
 
-	int remain_bytes = RECORD_SIZE - (record_end - record_begin);
+    int remaining = RECORD_SIZE - written;
 
-	if (remain_bytes > 0)
-	{
-		char empty = '$';
-		for (int i = 0; i < remain_bytes; i++)
-			fwrite(&empty, sizeof(char), 1, bin_filename);
-	}
+    char trash = '$';
+    for (int i = 0; i < remaining; i++)
+        fwrite(&trash, 1, 1, bin_file);
 }
 
 void save_record(FILE *bin_filename, Record *new_record)
