@@ -24,6 +24,6 @@ int csv_to_bin();
 int bin_to_text();
 void scan_quote_string(char *str);
 int criteria_search();
-void search_rrn();
+int search_rrn();
 
 #endif

@@ -4,6 +4,24 @@
 #include "utils.h"
 #include "record.h"
 
+
+
+char *meu_strtok(char** buffer, const char* delimitador) {
+    if (buffer == NULL || *buffer == NULL)
+        return NULL;
+
+    char *start = *buffer;
+    char* posicao_delimitador;
+
+    if ((posicao_delimitador = strpbrk(start, delimitador)) != NULL) {
+        *posicao_delimitador = '\0';
+        *buffer = posicao_delimitador + 1;
+    }
+    else
+        *buffer = NULL;
+
+    return start;
+}
 Record *new_record()
 {
 	/*
@@ -43,67 +61,67 @@ Record *new_record()
 
 Record *tokenize_record(char *buffer)
 {
-	/*
-		This function receives a CSV line and converts it into a Record struct
+    /*
+        This function receives a CSV line and converts it into a Record struct
 
-		Args:
-			(char*) buffer: line from CSV file separated by commas
+        Args:
+            (char*) buffer: line from CSV file separated by commas
 
-		Return:
-			temp_record: pointer to the created and filled Record
-	*/
+        Return:
+            temp_record: pointer to the created and filled Record
+    */
 
-	Record *temp_record = (Record *)malloc(sizeof(Record));
-	if (temp_record == NULL)
-		return NULL;
+    Record *temp_record = (Record *)malloc(sizeof(Record));
+    if (temp_record == NULL)
+        return NULL;
 
-	char *token;
+    char *token;
 
-	token = strtok(buffer, ",");
-	temp_record->station_code = integer_or_null(token);
+    token = meu_strtok(&buffer, ",");
+    temp_record->station_code = integer_or_null(token);
 
-	token = strtok(NULL, ",");
-	if (token)
-	{
-		token[strcspn(token, "\r\n")] = '\0';
-		temp_record->station_name = strdup(token);
-		temp_record->station_name_size = strlen(token);
-	}
-	else
-	{
-		temp_record->station_name = strdup("");
-		temp_record->station_name_size = 0;
-	}
+    token = meu_strtok(&buffer, ",");
+    if (token)
+    {
+        token[strcspn(token, "\r\n")] = '\0';
+        temp_record->station_name = strdup(token);
+        temp_record->station_name_size = strlen(token);
+    }
+    else
+    {
+        temp_record->station_name = strdup("");
+        temp_record->station_name_size = 0;
+    }
 
-	token = strtok(NULL, ",");
-	temp_record->line_code = integer_or_null(token);
+    token = meu_strtok(&buffer, ",");
+    temp_record->line_code = integer_or_null(token);
 
-	token = strtok(NULL, ",");
-	if (token)
-	{
-		token[strcspn(token, "\r\n")] = '\0';
-		temp_record->line_name = strdup(token);
-		temp_record->line_name_size = strlen(token);
-	}
-	else
-	{
-		temp_record->line_name = strdup("");
-		temp_record->line_name_size = 0;
-	}
+    token = meu_strtok(&buffer, ",");
+    if (token)
+    {
+        token[strcspn(token, "\r\n")] = '\0';
+        temp_record->line_name = strdup(token);
+        temp_record->line_name_size = strlen(token);
+    }
+    else
+    {
+        temp_record->line_name = strdup("");
+        temp_record->line_name_size = 0;
+    }
 
-	token = strtok(NULL, ",");
-	temp_record->next_station_code = integer_or_null(token);
+    token = meu_strtok(&buffer, ",");
+    temp_record->next_station_code = integer_or_null(token);
 
-	token = strtok(NULL, ",");
-	temp_record->next_station_distance = integer_or_null(token);
+    token = meu_strtok(&buffer, ",");
+    temp_record->next_station_distance = integer_or_null(token);
 
-	token = strtok(NULL, ",");
-	temp_record->line_integration_code = integer_or_null(token);
+    token = meu_strtok(&buffer, ",");
+    temp_record->line_integration_code = integer_or_null(token);
 
-	token = strtok(NULL, ",");
-	temp_record->station_integration_code = integer_or_null(token);
+    token = meu_strtok(&buffer, ",");
+    temp_record->station_integration_code = integer_or_null(token);
 
-	return temp_record;
+    return temp_record;
 }
 
 void save_record_to_bin(FILE *bin_file, Record *r)

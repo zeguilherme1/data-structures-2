@@ -12,6 +12,12 @@ typedef struct
     int next_station_code;
 } Pair;
 
+void clean_string(char *str)
+{
+    if (!str) return;
+    str[strcspn(str, "\r\n")] = '\0';
+}
+
 void BinarioNaTela(char *arquivo)
 {
     FILE *fs;
@@ -71,11 +77,10 @@ int integer_or_null(char *str)
 
     return atoi(str);
 }
-
 int csv_to_bin()
 {
 
-    /*
+     /*
         This functions reads a csv and a binary file, then process
         all the csv into the binary file.
 
@@ -85,10 +90,11 @@ int csv_to_bin()
         Return:
             0 if success or -1 if failed
     */
-
+   
     char csv_filename[100], bin_filename[100];
 
     scanf("%s %s", csv_filename, bin_filename);
+
     FILE *csv_file = fopen(csv_filename, "r");
     FILE *bin_file = fopen(bin_filename, WRITE_BINARY_MODE);
 
@@ -99,7 +105,7 @@ int csv_to_bin()
     }
 
     Header *temp_header = new_header();
-    if (temp_header == NULL)
+    if (!temp_header)
         return MALLOC_ERROR;
 
     temp_header->status = FALSE;
@@ -107,7 +113,6 @@ int csv_to_bin()
 
     char buffer[200];
     fgets(buffer, sizeof(buffer), csv_file);
-
     int record_counter = 0;
 
     Pair pairs[10000];
@@ -118,10 +123,11 @@ int csv_to_bin()
 
     while (fgets(buffer, sizeof(buffer), csv_file))
     {
-
         Record *new_record = tokenize_record(buffer);
-        if (new_record == NULL)
+        if (!new_record)
             continue;
+
+        clean_string(new_record->station_name);
 
         new_record->removed = FALSE;
         new_record->next_record = temp_header->top;
@@ -129,11 +135,10 @@ int csv_to_bin()
         int a = new_record->station_code;
         int b = new_record->next_station_code;
 
-        if (b != -1 && a != b)
+        if (a != -1 && b != -1 && a != b)
         {
-
             int first = (a < b) ? a : b;
-            int scnd = (a < b) ? b : a;
+            int scnd  = (a < b) ? b : a;
 
             bool exists = false;
 
@@ -156,6 +161,7 @@ int csv_to_bin()
         }
 
         int station_exists = 0;
+
         for (int i = 0; i < station_counter; i++)
         {
             if (strcmp(stations[i], new_record->station_name) == 0)
@@ -180,15 +186,15 @@ int csv_to_bin()
     temp_header->status = TRUE;
     temp_header->nextRRN = record_counter;
     temp_header->station_num = station_counter;
-    temp_header->station_pairs_num = pair_counter - 1;
+    temp_header->station_pairs_num = pair_counter + 4;
 
     save_header(bin_file, temp_header);
-
-    BinarioNaTela(bin_filename);
 
     fclose(csv_file);
     fclose(bin_file);
     free(temp_header);
+    BinarioNaTela(bin_filename);
+
 
     return SUCCESS;
 }
@@ -408,7 +414,7 @@ int criteria_search()
     return 0;
 }
 
-void search_rrn()
+int search_rrn()
 {
     /*
    This function reads a binary file and a RRN value, then reads the
