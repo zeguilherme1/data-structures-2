@@ -3,10 +3,14 @@
 #include <ctype.h>
 #include "record.h"
 #include "header.h"
+#include <stdbool.h>
 #include "utils.h"
 
 
-
+typedef struct {
+    int station_code;
+    int next_station_code;
+} Pair;
 
 void BinarioNaTela(char *arquivo) {
     FILE *fs;
@@ -53,50 +57,102 @@ int integer_or_null(char* str) {
 
 int csv_to_bin() {
 
-	char csv_filename[100], bin_filename[100];
+    char csv_filename[100], bin_filename[100];
 
-	scanf("%s %s", csv_filename, bin_filename);
-	FILE *csv_file = fopen(csv_filename, "r");
-	FILE *bin_file = fopen(bin_filename, WRITE_BINARY_MODE);
+    scanf("%s %s", csv_filename, bin_filename);
+    FILE *csv_file = fopen(csv_filename, "r");
+    FILE *bin_file = fopen(bin_filename, WRITE_BINARY_MODE);
 
-	if(!csv_file || !bin_file) {
-		printf("Falha no processamento do arquivo.");
-		return 0;
-	}
+    if(!csv_file || !bin_file) {
+        printf("Falha no processamento do arquivo.");
+        return 0;
+    }
 
-	Header* temp_header = new_header();
+    Header* temp_header = new_header();
+    if(temp_header == NULL) return MALLOC_ERROR;
 
-	if(temp_header == NULL) return MALLOC_ERROR;
+    temp_header->status = FALSE;
+    save_header(bin_file, temp_header);
 
-	save_header(bin_file, temp_header);
-	
-	char buffer[200]; // Removes the first CSV line
-	fgets(buffer, sizeof(buffer), csv_file);
+    char buffer[200];
+    fgets(buffer, sizeof(buffer), csv_file); 
 
-	int record_counter = 0;
+    int record_counter = 0;
 
-	while(fgets(buffer, sizeof(buffer), csv_file)) {
-		Record *new_record = tokenize_record(buffer);
+    Pair pairs[10000];
+    int pair_counter = 0;
 
-		if(new_record == NULL) return MALLOC_ERROR;
+    char stations[10000][100];
+    int station_counter = 0;
 
-		new_record->removed = FALSE;
-		new_record->next_record = temp_header->top;
+    while(fgets(buffer, sizeof(buffer), csv_file)) {
 
-		save_record_to_bin(bin_file, new_record);
-		record_counter++;
+        Record *new_record = tokenize_record(buffer);
+        if(new_record == NULL) continue;
 
-		free_record(&new_record);
-	}
+        new_record->removed = FALSE;
+        new_record->next_record = temp_header->top;
 
-	temp_header->status = FALSE;
-	temp_header->nextRRN = record_counter;
 
-	save_header(bin_file, temp_header);
-	BinarioNaTela(bin_filename);
-	return SUCCESS;
+        int a = new_record->station_code;
+        int b = new_record->next_station_code;
+
+        if(b != -1 && a != b){
+
+            int first = (a < b) ? a : b;
+            int scnd  = (a < b) ? b : a;
+
+            bool exists = false;
+
+            for(int i = 0; i < pair_counter; i++){
+                if(pairs[i].station_code == first &&
+                   pairs[i].next_station_code == scnd){
+                    exists = true;
+                    break;
+                }
+            }
+
+            if(!exists){
+                pairs[pair_counter].station_code = first;
+                pairs[pair_counter].next_station_code = scnd;
+                pair_counter++;
+            }
+        }
+
+        int station_exists = 0;
+        for(int i = 0; i < station_counter; i++){
+            if(strcmp(stations[i], new_record->station_name) == 0){
+                station_exists = 1;
+                break;
+            }
+        }
+
+        if(!station_exists){
+            strcpy(stations[station_counter], new_record->station_name);
+            station_counter++;
+        }
+
+        save_record_to_bin(bin_file, new_record);
+        record_counter++;
+
+        free_record(&new_record);
+    }
+ 
+    temp_header->status = TRUE;
+    temp_header->nextRRN = record_counter;
+    temp_header->station_num = station_counter;
+    temp_header->station_pairs_num = pair_counter - 1;
+
+    save_header(bin_file, temp_header);
+
+    BinarioNaTela(bin_filename);
+
+    fclose(csv_file);
+    fclose(bin_file);
+    free(temp_header);
+
+    return SUCCESS;
 }
-
 int bin_to_text(){
 	/*
         This function reads the binary file and print it, 
@@ -234,7 +290,7 @@ int criteria_search(){
 
 		for(int j = 0; j < num_fields; j++){
 			scanf("%s", criteria[j].field_name);
-			if(strcmp(criteria[j].field_name, "nomeEstacao") == 0 || strcmp(criteria[j].field_name, "nomeLinha") == 0){
+			if(strcmp(criteria[j].field_name, "station_name") == 0 || strcmp(criteria[j].field_name, "nomeLinha") == 0){
 				scan_quote_string(criteria[j].field_value); // if it is a string, removes the surrounding quotes from input
 			} else {
 				scanf("%s", criteria[j].field_value);
