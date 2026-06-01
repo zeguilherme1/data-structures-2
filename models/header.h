@@ -14,12 +14,18 @@ typedef struct header
     int station_pairs_num;
 } Header;
 
+/*
+    new_header:
+
+    This function creates a new header and set up initial values
+
+    Args:
+        No args
+
+    Return:
+        (Header*) new_header: The generated header
+
+*/
 Header *new_header();
-
-Header *read_binary_header(FILE *bin_file);
-
-void save_header(FILE *bin_file, Header *bin_header);
-
-int read_header(FILE *bin_file, Header *bin_header);
 
 #endif

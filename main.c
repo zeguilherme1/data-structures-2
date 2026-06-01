@@ -7,9 +7,15 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "record.h"
-#include "header.h"
-#include "utils.h"
+#include <stdlib.h>
+
+#include "models/record.h"
+#include "models/header.h"
+
+#include "io/csv_io.h"
+#include "io/binary_io.h"
+#include "search/criteria.h"
+#include "utils/string_utils.h"
 
 enum functions
 {
