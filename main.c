@@ -17,6 +17,7 @@
 #include "io/binary_io.h"
 
 #include "search/criteria.h"
+#include "search/rrn.h"
 #include "utils/string_utils.h"
 
 enum functions

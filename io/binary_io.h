@@ -44,5 +44,5 @@ Record *read_rrn_record(
     int rrn
 );
 
-int search_rrn();
+
 #endif

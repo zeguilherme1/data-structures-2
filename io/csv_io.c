@@ -8,7 +8,7 @@
 #include "../models/header.h"
 #include "../models/record.h"
 
-#include "../parser/csv_parser.h"
+#include "../parser/tokenizer.h"
 #include "../utils/string_utils.h"
 #include "../utils/debug_utils.h"
 
