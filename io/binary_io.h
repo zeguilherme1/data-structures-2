@@ -10,7 +10,7 @@
 #define RECORD_SIZE 80
 
 #define READ_BINARY_MODE "rb"
-#define WRITE_BINARY_MODE "wb"
+#define WRITE_BINARY_MODE "wb+"
 
 Header *read_binary_header(FILE *bin_file);
 
