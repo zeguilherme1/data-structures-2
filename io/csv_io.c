@@ -28,7 +28,7 @@ int csv_to_bin()
     if (csv_file == NULL || bin_file == NULL)
     {
         printf("Falha no processamento do arquivo.");
-        return 0;
+        return -1;
     }
 
     Header *temp_header = new_header();

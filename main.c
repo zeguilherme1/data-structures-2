@@ -28,6 +28,7 @@ enum functions
 	SEQUENCIAL_SEARCH,
 	RRN_SEARCH,
 	CREATE_PRIMARY_INDEX,
+	INDEX_SEARCH,
 } Functions;
 
 int main()
@@ -55,6 +56,9 @@ int main()
 		break;
 	case CREATE_PRIMARY_INDEX:
 		create_index_file();
+		break;
+	case INDEX_SEARCH:
+		index_or_criteria_search();
 		break;
 	}
 
