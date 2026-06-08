@@ -27,7 +27,7 @@ void read_criteria(Search_criteria *criteria, int num_fields){
     }
 }
 
-int sequential_scan_with_criteria(FILE *fp, long data_offset, Search_criteria *criteria, int num_fields){
+int sequential_criteria_scan(FILE *fp, long data_offset, Search_criteria *criteria, int num_fields){
     fseek(fp, data_offset, SEEK_SET);
 
     int found = 0;
@@ -54,6 +54,7 @@ int sequential_scan_with_criteria(FILE *fp, long data_offset, Search_criteria *c
             if (matches_record_criteria(temp_record, criteria, num_fields) == 0)
             {
                 print_record(temp_record);
+                printf("meu found da sequential %d", found);
                 found = 1;
             }
         }
@@ -108,8 +109,7 @@ int criteria_search()
         Search_criteria criteria[num_fields];
 
         read_criteria(criteria, num_fields);
-    
-        int search_result = sequential_scan_with_criteria(bin_file, data_offset, criteria, num_fields);
+        int search_result = sequential_criteria_scan(bin_file, data_offset, criteria, num_fields);
 
         if(search_result == FILE_NOT_FOUND){
             printf("Falha no processamento do arquivo!\n");
@@ -149,7 +149,7 @@ int find_rrn_by_station_code(FILE *index_file, int has_station_code){
     fseek(index_file, 0, SEEK_END);
     long file_size = ftell(index_file);
 
-    int total = file_size / sizeof(PrimaryIndex);
+    int total = (file_size - 1) / sizeof(PrimaryIndex);
 
     int left = 0;
     int right = total - 1;
@@ -157,10 +157,13 @@ int find_rrn_by_station_code(FILE *index_file, int has_station_code){
     while(left <= right){
         int mid = (left + right) / 2;
 
-        fseek(index_file, mid * sizeof(PrimaryIndex), SEEK_SET);
+        fseek(index_file, 1 + mid * sizeof(PrimaryIndex), SEEK_SET);
 
         PrimaryIndex index;
-        fread(&index, sizeof(PrimaryIndex), 1, index_file);
+
+        if (fread(&index, sizeof(PrimaryIndex), 1, index_file) != 1) {
+            return NO_DATA_ERROR;
+        }
 
         if(index.station_code == has_station_code){
             return index.rrn;
@@ -222,20 +225,15 @@ int index_or_criteria_search(){
         read_criteria(criteria, num_fields);
 
         int has_station_code = get_station_code(criteria, num_fields);
-
         int found = 0;
-
         if(has_station_code != NO_DATA_ERROR){
             fseek(index_file, 0, SEEK_SET);
             int rrn = find_rrn_by_station_code(index_file, has_station_code);
-            
             if(rrn != NO_DATA_ERROR){
                 fseek(data_file, data_offset, SEEK_SET);
-                
                 Record *result_record = read_rrn_record(data_file, rrn);
-
                 if (result_record == NULL)
-                {
+                {  
                     printf("Registro inexistente.\n");
                     free_record(&result_record);
                     fclose(index_file);
@@ -252,11 +250,9 @@ int index_or_criteria_search(){
                 free_record(&result_record);
             }
 
-        } else{
+        } else{ //sem codEstacao
             fseek(data_file, data_offset, SEEK_SET);
-
-            int search_result = sequential_scan_with_criteria(data_file, data_offset, criteria, num_fields);
-
+            int search_result = sequential_criteria_scan(data_file, data_offset, criteria, num_fields);
             if(search_result == FILE_NOT_FOUND){
                 printf("Falha no processamento do arquivo.\n");
                 fclose(data_file);
@@ -270,6 +266,7 @@ int index_or_criteria_search(){
 
         if(!found){
             printf("Registro inexistente.\n");
+ 
         }
         if(i < comparation_num - 1){
             printf("\n");
