@@ -5,8 +5,10 @@
 
 #include "../models/header.h"
 #include "../models/record.h"
+#include "../search/criteria.h"
 
 #include "binary_io.h"
+
 Header *read_binary_header(FILE *bin_file)
 {
     Header *bin_header = new_header();

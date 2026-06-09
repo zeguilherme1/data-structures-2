@@ -28,9 +28,12 @@ void read_criteria(Search_criteria *criteria, int num_fields)
     }
 }
 
-Record *sequential_search(FILE *fp, long data_offset, Search_criteria *criteria, int num_fields)
+Record **sequential_search(FILE *fp, long data_offset, Search_criteria *criteria, int num_fields, int *count)
 {
     fseek(fp, data_offset, SEEK_SET); //start at first record
+
+    Record **results = NULL;
+    *count = 0;
 
     while (1)
     {
@@ -40,7 +43,7 @@ Record *sequential_search(FILE *fp, long data_offset, Search_criteria *criteria,
         if (ret_record == -1) //EOF
         {
             free_record(&temp_record);
-            return NULL;
+            return results;
         }
         //only consider valid records
         if (temp_record->removed == FALSE)
@@ -48,7 +51,11 @@ Record *sequential_search(FILE *fp, long data_offset, Search_criteria *criteria,
             //check if all criterias matches
             if (matches_record_criteria(temp_record, criteria, num_fields) == 0)
             {
-                return temp_record;
+                //returns a array of found records
+                results = realloc(results, (*count + 1) * sizeof(Record *));
+                results[*count] = temp_record;
+                (*count)++;
+                continue;
             }
         }
 
@@ -141,16 +148,28 @@ Record *indexed_search(FILE *data_file, FILE *index_file, long data_offset, Sear
     return NULL;
 }
 
-Record *search_record(FILE *data_file, FILE *index_file, long data_offset, Search_criteria *criteria, int num_fields)
+Record **search_record(FILE *data_file, FILE *index_file, long data_offset, Search_criteria *criteria, int num_fields, int *count)
 {
     int has_station_code = get_station_code(criteria, num_fields);
 
     if (has_station_code != NO_DATA_ERROR && index_file != NULL)
     {
-        return indexed_search(data_file, index_file, data_offset, criteria, num_fields, has_station_code);
+        Record *rec = indexed_search(data_file, index_file, data_offset, criteria, num_fields, has_station_code);
+
+        if (rec == NULL)
+        {
+            *count = 0;
+            return NULL;
+        }
+
+        Record **results = malloc(sizeof(Record *));
+        results[0] = rec;
+        *count = 1;
+
+        return results;
     }
 
-    return sequential_search(data_file, data_offset, criteria, num_fields);
+    return sequential_search(data_file, data_offset, criteria, num_fields, count);
 }
 
 int criteria_search()
@@ -195,16 +214,21 @@ int criteria_search()
 
         read_criteria(criteria, num_fields);
 
-        Record *rec = search_record(bin_file, NULL, data_offset, criteria, num_fields);
+        int count = 0;
+        Record **rec = sequential_search(bin_file, data_offset, criteria, num_fields, &count);
 
-        if (rec == NULL)
+        if (count == 0)
         {
             printf("Registro inexistente.\n");
         }
         else
         {
-            print_record(rec);
-            free_record(&rec);
+            for (int j = 0; j < count; j++)
+            {
+                print_record(rec[j]);
+                free_record(&rec[j]);
+            }
+            free(rec);
         }
 
         if (i < comparation_num - 1)
@@ -266,17 +290,21 @@ int index_or_criteria_search()
 
         read_criteria(criteria, num_fields);
 
-        //may use index depending on criteria
-        Record *rec = search_record(data_file, index_file, data_offset, criteria, num_fields);
+        int count = 0;
+        Record **rec = search_record(data_file, index_file, data_offset, criteria, num_fields, &count);
 
-        if (rec == NULL)
+        if (count == 0)
         {
             printf("Registro inexistente.\n");
         }
         else
         {
-            print_record(rec);
-            free_record(&rec);
+            for (int j = 0; j < count; j++)
+            {
+                print_record(rec[j]);
+                free_record(&rec[j]);
+            }
+            free(rec);
         }
 
         if (i < comparation_num - 1)
