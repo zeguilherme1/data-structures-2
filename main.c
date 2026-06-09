@@ -29,6 +29,9 @@ enum functions
 	RRN_SEARCH,
 	CREATE_PRIMARY_INDEX,
 	INDEX_SEARCH,
+	DELETE,
+	INSERT,
+	UPDATE,
 } Functions;
 
 int main()
@@ -59,6 +62,9 @@ int main()
 		break;
 	case INDEX_SEARCH:
 		index_or_criteria_search();
+		break;
+	case UPDATE:
+		update_records();
 		break;
 	}
 

@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../constants.h"
 
 #include "../models/header.h"
 #include "../models/record.h"
 #include "../search/criteria.h"
+#include "../models/index.h"
+#include "../search/rrn.h"
+#include "../utils/debug_utils.h"
 
 #include "binary_io.h"
 
@@ -62,7 +66,9 @@ int read_record(FILE *bin_file, Record *bin_record)
     if (bin_file == NULL || bin_record == NULL)
         return NO_DATA_ERROR;
 
+    long start = ftell(bin_file);
     int verify = 0;
+
 
     verify += fread(&bin_record->removed, sizeof(char), 1, bin_file);
     verify += fread(&bin_record->next_record, sizeof(int), 1, bin_file);
@@ -107,10 +113,16 @@ int read_record(FILE *bin_file, Record *bin_record)
     char trash[43];
     int trash_size = 43 - bin_record->station_name_size - bin_record->line_name_size;
 
-    if (trash_size > 0)
-        fread(trash, sizeof(char), trash_size, bin_file);
+    long end = ftell(bin_file);
+    int bytes_read = end - start;
 
-    if (verify == 10 + bin_record->station_name_size + bin_record->line_name_size)
+    int remaining = RECORD_SIZE - bytes_read;
+
+    if (remaining > 0)
+        fseek(bin_file, remaining, SEEK_CUR);
+
+    // valida leitura
+    if (verify >= 10) // mínimo esperado
         return 0;
 
     return -1;
@@ -196,16 +208,216 @@ Record *read_rrn_record(FILE *bin_file, int rrn)
     fread(&find_record->station_name_size, sizeof(int), 1, bin_file);
     if (find_record->station_name_size > 0)
     {
-        find_record->station_name = (char *)calloc(find_record->station_name_size, sizeof(char));
+        find_record->station_name = malloc(find_record->station_name_size + 1);
+        fread(find_record->station_name, sizeof(char), find_record->station_name_size, bin_file);
+        find_record->station_name[find_record->station_name_size] = '\0';
     }
-    fread(find_record->station_name, sizeof(char), find_record->station_name_size, bin_file);
+    else
+    {
+        find_record->station_name = NULL;
+    }
 
     fread(&find_record->line_name_size, sizeof(int), 1, bin_file);
     if (find_record->line_name_size > 0)
     {
-        find_record->line_name = (char *)calloc(find_record->line_name_size, sizeof(char));
+        find_record->line_name = malloc(find_record->line_name_size + 1);
+        fread(find_record->line_name, sizeof(char), find_record->line_name_size, bin_file);
+        find_record->line_name[find_record->line_name_size] = '\0';
     }
-    fread(find_record->line_name, sizeof(char), find_record->line_name_size, bin_file);
+    else
+    {
+        find_record->line_name = NULL;
+    }
 
     return find_record;
+}
+
+
+void apply_updates(Record *rec, Search_criteria *updates, int p)
+{
+    for(int i = 0; i < p; i++)
+    {
+        char *field = updates[i].field_name;
+        char *value = updates[i].field_value;
+        
+        //for integer fields
+        if (strcmp(field, "codEstacao") == 0)
+        {
+            if (strcmp(value, "NULO") != 0)
+                rec->station_code = atoi(value); //station code can't be NULL
+        }
+        //if the value is "NULO" store -1 
+        else if (strcmp(field, "codLinha") == 0)
+        {
+            rec->line_code = (strcmp(value, "NULO") == 0) ? -1 : atoi(value);
+        }
+        else if (strcmp(field, "codProxEstacao") == 0)
+        {
+            rec->next_station_code = (strcmp(value, "NULO") == 0) ? -1 : atoi(value);
+        }
+        else if (strcmp(field, "distProxEstacao") == 0)
+        {
+            rec->next_station_distance = (strcmp(value, "NULO") == 0) ? -1 : atoi(value);
+        }
+        else if (strcmp(field, "codLinhaIntegra") == 0)
+        {
+            rec->line_integration_code = (strcmp(value, "NULO") == 0) ? -1 : atoi(value);
+        }
+        else if (strcmp(field, "codEstIntegra") == 0)
+        {
+            rec->station_integration_code = (strcmp(value, "NULO") == 0) ? -1 : atoi(value);
+        }
+        //for string fields
+        else if (strcmp(field, "nomeEstacao") == 0)
+        {
+            if (strcmp(value, "NULO") != 0)
+            {
+                if (rec->station_name != NULL)
+                    free(rec->station_name);
+                rec->station_name_size = strlen(value);
+                rec->station_name = malloc(rec->station_name_size + 1);
+                if (rec->station_name != NULL)
+                    strcpy(rec->station_name, value);
+            }
+        }
+        else if (strcmp(field, "nomeLinha") == 0)
+        {
+            if (rec->line_name != NULL)
+                free(rec->line_name);
+
+            if (strcmp(value, "NULO") == 0)
+            {
+                rec->line_name = NULL;
+                rec->line_name_size = 0;
+            }
+            else
+            {
+                rec->line_name_size = strlen(value);
+                rec->line_name = malloc(rec->line_name_size + 1);
+                if (rec->line_name != NULL)
+                    strcpy(rec->line_name, value);
+            }
+        }
+    }
+}
+
+int update_records()
+{
+    char data_filename[100];
+    char index_filename[100];
+
+    scanf("%s", data_filename);
+    scanf("%s", index_filename);
+
+    int comparation_num;
+    scanf("%d", &comparation_num);
+
+    FILE *data_file = fopen(data_filename, READ_BINARY_MODE);
+    FILE *index_file = fopen(index_filename, READ_BINARY_MODE);
+
+    if (data_file == NULL || index_file == NULL)
+    {
+        printf("Falha no processamento do arquivo.\n");
+        return FILE_NOT_FOUND;
+    }
+
+    Header *temp_header = new_header();
+    if (temp_header == NULL)
+    {
+        fclose(data_file);
+        fclose(index_file);
+        return MALLOC_ERROR;
+    }
+
+    int ret_header = read_header(data_file, temp_header);
+    if (ret_header == -1)
+    {
+        free(temp_header);
+        fclose(data_file);
+        fclose(index_file);
+        printf("Falha no processamento do arquivo.\n");
+        return FILE_NOT_FOUND;
+    }
+
+    temp_header->status = '0';
+    save_header(data_file, temp_header);
+
+    long data_offset = ftell(data_file);
+    
+    //store index in memory - CONFERIR SE PODE SER ASSIM!!
+    fseek(index_file, 0, SEEK_END);
+    long index_size_bytes = ftell(index_file);
+
+    int index_size = (index_size_bytes - 1) / sizeof(PrimaryIndex);
+
+    PrimaryIndex *index_array = malloc(index_size * sizeof(PrimaryIndex));
+
+    fseek(index_file, 1, SEEK_SET);
+    fread(index_array, sizeof(PrimaryIndex), index_size, index_file);
+    
+    //do n updates
+    for (int i = 0; i < comparation_num; i++)
+    {
+        int num_search_fields;
+        scanf("%d", &num_search_fields);
+
+        Search_criteria criteria_B[num_search_fields];
+        read_criteria(criteria_B, num_search_fields);
+
+        int num_update_fields;
+        scanf("%d", &num_update_fields);
+
+        Search_criteria criteria_A[num_update_fields];
+        read_criteria(criteria_A, num_update_fields);
+
+        int count = 0;
+
+        Search_result *results = search_with_rrn(data_file, index_file, data_offset, criteria_B, num_search_fields, &count);
+        
+        if(count == 0){
+            continue;
+        }
+
+        for(int j = 0; j < count; j++)
+        {
+            Record *rec = results[j].record;
+            int rrn = results[j].rrn;
+            int old_code = rec->station_code;
+
+            apply_updates(rec, criteria_A, num_update_fields);
+            
+            long byte_offset = HEADER_SIZE + rrn * RECORD_SIZE;
+            fseek(data_file, byte_offset, SEEK_SET);
+            save_record_to_bin(data_file, rec);
+
+            if(old_code != rec -> station_code)
+            {
+                update_index_array(index_array, index_size, rrn, rec->station_code);
+            }
+            free_record(&rec);
+        }
+        free(results);
+    }
+    //rewrites the index
+    qsort(index_array, index_size, sizeof(PrimaryIndex), compare_index);
+
+    rewind(index_file);
+    char status = '1';
+    fwrite(&status, sizeof(char), 1, index_file);
+    fwrite(index_array, sizeof(PrimaryIndex), index_size, index_file);
+
+    //update header status, close files and print binary
+    temp_header->status = '1';
+    save_header(data_file, temp_header);
+
+    fclose(data_file);
+    fclose(index_file);
+
+    BinarioNaTela(data_filename);
+    BinarioNaTela(index_filename);
+
+    free(index_array);
+    free(temp_header);
+
+    return SUCCESS;
 }

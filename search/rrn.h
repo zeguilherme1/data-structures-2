@@ -1,6 +1,27 @@
 #ifndef RRN_H
 #define RRN_H
 
+#include <stdio.h> 
+
+typedef struct record Record;
+typedef struct criteria Search_criteria;
+
+//struct to store a register and its rrn 
+typedef struct {
+    Record *record;
+    int rrn;
+} Search_result;
+
+
+Search_result *search_with_rrn(
+    FILE *data_file,
+    FILE *index_file,
+    long data_offset,
+    Search_criteria *criteria,
+    int num_fields,
+    int *count
+);
+
 /*
     [functionality 4]
     search_rrn: 

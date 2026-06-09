@@ -8,13 +8,7 @@
 #include "../utils/debug_utils.h"
 #include "../constants.h"
 
-int compare_index(const void *a, const void *b)
-{
-    const PrimaryIndex *x = (const PrimaryIndex *)a;
-    const PrimaryIndex *y = (const PrimaryIndex *)b;
 
-    return x->station_code - y->station_code;
-}
 
 void create_index_file()
 {
@@ -119,4 +113,24 @@ void create_index_file()
     fclose(index_file);
 
     BinarioNaTela(primary_index_bin);
+}
+
+int update_index_array(PrimaryIndex *index_array, int size, int rrn, int new_code)
+{
+    for(int i = 0; i < size; i++)
+    {
+        if(index_array[i]. rrn == rrn)
+        {
+            index_array[i].station_code = new_code;
+            return SUCCESS;
+        }
+    }
+    return NO_DATA_ERROR;
+}
+
+int compare_index(const void *a, const void *b)
+{
+    const PrimaryIndex *x = (const PrimaryIndex *)a;
+    const PrimaryIndex *y = (const PrimaryIndex *)b;
+    return x->station_code - y->station_code;
 }

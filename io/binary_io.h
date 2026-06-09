@@ -9,7 +9,7 @@
 #define HEADER_SIZE 17
 #define RECORD_SIZE 80
 
-#define READ_BINARY_MODE "rb"
+#define READ_BINARY_MODE "rb+"
 #define WRITE_BINARY_MODE "wb+"
 
 Header *read_binary_header(FILE *bin_file);
@@ -44,5 +44,8 @@ Record *read_rrn_record(
     int rrn
 );
 
+void apply_updates(Record *rec, Search_criteria *updates, int p);
+
+int update_records();
 
 #endif
