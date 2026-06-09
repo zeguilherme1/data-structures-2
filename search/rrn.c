@@ -14,7 +14,7 @@ int search_rrn()
     char bin_filename[100];
     int rrn;
 
-    scanf("%s %d", bin_filename, &rrn);
+    scanf("%s %d", bin_filename, &rrn); //read name file and rrn
 
     FILE *bin_file = fopen(bin_filename, READ_BINARY_MODE);
 
@@ -28,13 +28,14 @@ int search_rrn()
     if (bin_header == NULL)
         return MALLOC_ERROR;
 
+    //validate rrn bounds
     if (rrn < 0 || rrn >= bin_header->nextRRN)
     {
         printf("Registro inexistente.\n");
         fclose(bin_file);
         return NO_DATA_ERROR;
     }
-
+    //direct acess to record using rrn
     Record *result_record = read_rrn_record(bin_file, rrn);
     if (result_record == NULL)
     {
@@ -43,6 +44,6 @@ int search_rrn()
         return NO_DATA_ERROR;
     }
 
-    print_record(result_record);
+    print_record(result_record); //print found record
     free(bin_header);
 }

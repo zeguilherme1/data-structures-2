@@ -17,7 +17,7 @@ Record *tokenize_record(char *buffer)
 	char *token;
 
 	token = meu_strtok(&buffer, ",");
-	temp_record->station_code = integer_or_null(token);
+	temp_record->station_code = integer_or_null(token); //parse int or null
 
 	token = meu_strtok(&buffer, ",");
 	if (token)
@@ -38,13 +38,13 @@ Record *tokenize_record(char *buffer)
 	token = meu_strtok(&buffer, ",");
 	if (token)
 	{
-		token[strcspn(token, "\r\n")] = '\0';
+		token[strcspn(token, "\r\n")] = '\0'; //remove newline
 		temp_record->line_name = strdup(token);
 		temp_record->line_name_size = strlen(token);
 	}
 	else
 	{
-		temp_record->line_name = strdup("");
+		temp_record->line_name = strdup(""); //empty field
 		temp_record->line_name_size = 0;
 	}
 
@@ -60,24 +60,25 @@ Record *tokenize_record(char *buffer)
 	token = meu_strtok(&buffer, ",");
 	temp_record->station_integration_code = integer_or_null(token);
 
-	return temp_record;
+	return temp_record; //fully built record
 }
 
-char *meu_strtok(char **buffer, const char *delimitador)
+char *meu_strtok(char **buffer, const char *delimiter)
 {
     if (buffer == NULL || *buffer == NULL)
-        return NULL;
+        return NULL; // no more tokens
 
     char *start = *buffer;
-    char *posicao_delimitador;
+    char *delimiter_position;
 
-    if ((posicao_delimitador = strpbrk(start, delimitador)) != NULL)
+    // find next delimiter
+    if ((delimiter_position = strpbrk(start, delimiter)) != NULL)
     {
-        *posicao_delimitador = '\0';
-        *buffer = posicao_delimitador + 1;
+        *delimiter_position = '\0'; // terminate token
+        *buffer = delimiter_position + 1; // move forward
     }
     else
-        *buffer = NULL;
+        *buffer = NULL; // last token
 
     return start;
 }
