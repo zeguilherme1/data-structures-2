@@ -51,64 +51,41 @@ void print_record(Record *bin_record)
 	printf("\n");
 }
 
-int matches_record_criteria(Record *bin_record, Search_criteria *criteria, int num_fields)
+int matches_record_criteria(Record *rec, Search_criteria *criteria, int num_fields)
 {
+    for (int i = 0; i < num_fields; i++)
+    {
+        int match = -1;
 
-	for (int i = 0; i < num_fields; i++)
-	{
-		int ret_match;
+        if (strcmp(criteria[i].field_name, "nomeEstacao") == 0)
+            match = matches_string(criteria[i].field_value, rec->station_name, rec->station_name_size);
 
-		if (strcmp(criteria[i].field_name, "nomeEstacao") == 0)
-		{
-			ret_match = matches_string(criteria[i].field_value, bin_record->station_name, bin_record->station_name_size);
-			if (ret_match)
-				return -1;
-		}
-		else if (strcmp(criteria[i].field_name, "nomeLinha") == 0)
-		{
-			ret_match = matches_string(criteria[i].field_value, bin_record->line_name, bin_record->line_name_size);
-			if (ret_match)
-				return -1;
-		}
-		else if (strcmp(criteria[i].field_name, "codEstacao") == 0)
-		{
-			ret_match = matches_integer(criteria[i].field_value, bin_record->station_code);
-			if (ret_match)
-				return -1;
-		}
-		else if (strcmp(criteria[i].field_name, "codLinha") == 0)
-		{
-			ret_match = matches_integer(criteria[i].field_value, bin_record->line_code);
-			if (ret_match)
-				return -1;
-		}
-		else if (strcmp(criteria[i].field_name, "codProxEstacao") == 0)
-		{
-			ret_match = matches_integer(criteria[i].field_value, bin_record->next_station_code);
-			if (ret_match)
-				return -1;
-		}
-		else if (strcmp(criteria[i].field_name, "distProxEstacao") == 0)
-		{
-			ret_match = matches_integer(criteria[i].field_value, bin_record->next_station_distance);
-			if (ret_match)
-				return -1;
-		}
-		else if (strcmp(criteria[i].field_name, "codLinhaIntegra") == 0)
-		{
-			ret_match = matches_integer(criteria[i].field_value, bin_record->line_integration_code);
-			if (ret_match)
-				return -1;
-		}
-		else if (strcmp(criteria[i].field_name, "codEstIntegra") == 0)
-		{
-			ret_match = matches_integer(criteria[i].field_value, bin_record->station_integration_code);
-			if (ret_match)
-				return -1;
-		}
-	}
+        else if (strcmp(criteria[i].field_name, "nomeLinha") == 0)
+            match = matches_string(criteria[i].field_value, rec->line_name, rec->line_name_size);
 
-	return SUCCESS;
+        else if (strcmp(criteria[i].field_name, "codEstacao") == 0)
+            match = matches_integer(criteria[i].field_value, rec->station_code);
+
+        else if (strcmp(criteria[i].field_name, "codLinha") == 0)
+            match = matches_integer(criteria[i].field_value, rec->line_code);
+
+        else if (strcmp(criteria[i].field_name, "codProxEstacao") == 0)
+            match = matches_integer(criteria[i].field_value, rec->next_station_code);
+
+        else if (strcmp(criteria[i].field_name, "distProxEstacao") == 0)
+            match = matches_integer(criteria[i].field_value, rec->next_station_distance);
+
+        else if (strcmp(criteria[i].field_name, "codLinhaIntegra") == 0)
+            match = matches_integer(criteria[i].field_value, rec->line_integration_code);
+
+        else if (strcmp(criteria[i].field_name, "codEstIntegra") == 0)
+            match = matches_integer(criteria[i].field_value, rec->station_integration_code);
+
+        if (match != 0)
+            return -1;
+    }
+
+    return 0;
 }
 
 void free_record(Record **temp_record)

@@ -69,7 +69,6 @@ int read_record(FILE *bin_file, Record *bin_record)
     long start = ftell(bin_file);
     int verify = 0;
 
-
     verify += fread(&bin_record->removed, sizeof(char), 1, bin_file);
     verify += fread(&bin_record->next_record, sizeof(int), 1, bin_file);
     verify += fread(&bin_record->station_code, sizeof(int), 1, bin_file);
@@ -232,21 +231,20 @@ Record *read_rrn_record(FILE *bin_file, int rrn)
     return find_record;
 }
 
-
 void apply_updates(Record *rec, Search_criteria *updates, int p)
 {
-    for(int i = 0; i < p; i++)
+    for (int i = 0; i < p; i++)
     {
         char *field = updates[i].field_name;
         char *value = updates[i].field_value;
-        
-        //for integer fields
+
+        // for integer fields
         if (strcmp(field, "codEstacao") == 0)
         {
             if (strcmp(value, "NULO") != 0)
-                rec->station_code = atoi(value); //station code can't be NULL
+                rec->station_code = atoi(value); // station code can't be NULL
         }
-        //if the value is "NULO" store -1 
+        // if the value is "NULO" store -1
         else if (strcmp(field, "codLinha") == 0)
         {
             rec->line_code = (strcmp(value, "NULO") == 0) ? -1 : atoi(value);
@@ -267,7 +265,7 @@ void apply_updates(Record *rec, Search_criteria *updates, int p)
         {
             rec->station_integration_code = (strcmp(value, "NULO") == 0) ? -1 : atoi(value);
         }
-        //for string fields
+        // for string fields
         else if (strcmp(field, "nomeEstacao") == 0)
         {
             if (strcmp(value, "NULO") != 0)
@@ -343,8 +341,8 @@ int update_records()
     save_header(data_file, temp_header);
 
     long data_offset = ftell(data_file);
-    
-    //store index in memory - CONFERIR SE PODE SER ASSIM!!
+
+    // store index in memory - CONFERIR SE PODE SER ASSIM!!
     fseek(index_file, 0, SEEK_END);
     long index_size_bytes = ftell(index_file);
 
@@ -354,8 +352,8 @@ int update_records()
 
     fseek(index_file, 1, SEEK_SET);
     fread(index_array, sizeof(PrimaryIndex), index_size, index_file);
-    
-    //do n updates
+
+    // do n updates
     for (int i = 0; i < comparation_num; i++)
     {
         int num_search_fields;
@@ -373,24 +371,25 @@ int update_records()
         int count = 0;
 
         Search_result *results = search_with_rrn(data_file, index_file, data_offset, criteria_B, num_search_fields, &count);
-        
-        if(count == 0){
+
+        if (count == 0)
+        {
             continue;
         }
 
-        for(int j = 0; j < count; j++)
+        for (int j = 0; j < count; j++)
         {
             Record *rec = results[j].record;
             int rrn = results[j].rrn;
             int old_code = rec->station_code;
 
             apply_updates(rec, criteria_A, num_update_fields);
-            
+
             long byte_offset = HEADER_SIZE + rrn * RECORD_SIZE;
             fseek(data_file, byte_offset, SEEK_SET);
             save_record_to_bin(data_file, rec);
 
-            if(old_code != rec -> station_code)
+            if (old_code != rec->station_code)
             {
                 update_index_array(index_array, index_size, rrn, rec->station_code);
             }
@@ -398,7 +397,7 @@ int update_records()
         }
         free(results);
     }
-    //rewrites the index
+    // rewrites the index
     qsort(index_array, index_size, sizeof(PrimaryIndex), compare_index);
 
     rewind(index_file);
@@ -406,7 +405,7 @@ int update_records()
     fwrite(&status, sizeof(char), 1, index_file);
     fwrite(index_array, sizeof(PrimaryIndex), index_size, index_file);
 
-    //update header status, close files and print binary
+    // update header status, close files and print binary
     temp_header->status = '1';
     save_header(data_file, temp_header);
 
@@ -420,6 +419,52 @@ int update_records()
     free(temp_header);
 
     return SUCCESS;
+}
+
+static int exists_station_name(FILE *data_file, Header *header, const char *name)
+{
+    fseek(data_file, HEADER_SIZE, SEEK_SET);
+    for (int i = 0; i < header->nextRRN; i++)
+    {
+        Record *rec = new_record();
+        if (read_record(data_file, rec) == -1)
+        {
+            free_record(&rec);
+            break;
+        }
+        if (rec->removed == FALSE &&
+            rec->station_name != NULL &&
+            strcmp(rec->station_name, name) == 0)
+        {
+            free_record(&rec);
+            return 1;
+        }
+        free_record(&rec);
+    }
+    return 0;
+}
+
+static int exists_station_pair(FILE *data_file, Header *header, int code, int next_code)
+{
+    fseek(data_file, HEADER_SIZE, SEEK_SET);
+    for (int i = 0; i < header->nextRRN; i++)
+    {
+        Record *rec = new_record();
+        if (read_record(data_file, rec) == -1)
+        {
+            free_record(&rec);
+            break;
+        }
+        if (rec->removed == FALSE &&
+            rec->station_code == code &&
+            rec->next_station_code == next_code)
+        {
+            free_record(&rec);
+            return 1;
+        }
+        free_record(&rec);
+    }
+    return 0;
 }
 
 int delete_records()
@@ -440,24 +485,20 @@ int delete_records()
     FILE *index_file =
         fopen(index_filename, "rb+");
 
-    if(data_file == NULL ||
-       index_file == NULL)
+    if (data_file == NULL ||
+        index_file == NULL)
     {
         printf(
-            "Falha no processamento do arquivo.\n"
-        );
+            "Falha no processamento do arquivo.\n");
         return FILE_NOT_FOUND;
     }
 
-    Header *header =
-        read_binary_header(data_file);
-
-    if(header == NULL ||
-       header->status != TRUE)
+    Header *header = read_binary_header(data_file);
+    if (header == NULL ||
+        header->status != TRUE)
     {
         printf(
-            "Falha no processamento do arquivo.\n"
-        );
+            "Falha no processamento do arquivo.\n");
 
         fclose(data_file);
         fclose(index_file);
@@ -473,12 +514,11 @@ int delete_records()
     PrimaryIndex *indexes =
         load_indexes(
             index_file,
-            &index_count
-        );
+            &index_count);
 
     long data_offset = HEADER_SIZE;
 
-    for(int op = 0; op < removals; op++)
+    for (int op = 0; op < removals; op++)
     {
         int num_fields;
         scanf("%d", &num_fields);
@@ -487,11 +527,9 @@ int delete_records()
 
         read_criteria(
             criteria,
-            num_fields
-        );
+            num_fields);
 
         int count = 0;
-
         Search_result *results =
             search_with_rrn(
                 data_file,
@@ -499,29 +537,49 @@ int delete_records()
                 data_offset,
                 criteria,
                 num_fields,
-                &count
-            );
+                &count);
 
-        if(results == NULL)
-            continue;
-
-        for(int i = 0; i < count; i++)
+        if (count == 0)
         {
+            free(results);
+            continue;
+        }
+        for (int i = count - 1; i >= 0; i--)
+        {
+            int rrn = results[i].rrn;
+
+            long offset = HEADER_SIZE + rrn * RECORD_SIZE;
+
+            fflush(data_file);
+
+            fseek(data_file, offset, SEEK_SET);
+
+            char removed_flag;
+            if (fread(&removed_flag, sizeof(char), 1, data_file) != 1)
+                continue;
+
+            if (removed_flag == TRUE)
+                continue;
+
             remove_record_by_rrn(
                 data_file,
                 header,
-                results[i].rrn
-            );
+                rrn);
+            if (results[i].record->station_name != NULL &&
+                !exists_station_name(data_file, header, results[i].record->station_name))
+                header->station_num--;
 
+            if (results[i].record->next_station_code != -1 &&
+                !exists_station_pair(data_file, header,
+                                     results[i].record->station_code,
+                                     results[i].record->next_station_code))
+                header->station_pairs_num--;
             remove_index_entry(
                 indexes,
                 &index_count,
-                results[i].record->station_code
-            );
+                results[i].record->station_code);
 
-            free_record(
-                &results[i].record
-            );
+            free_record(&results[i].record);
         }
 
         free(results);
@@ -531,14 +589,12 @@ int delete_records()
 
     save_header(
         data_file,
-        header
-    );
+        header);
 
     rewrite_index_file(
         index_filename,
         indexes,
-        index_count
-    );
+        index_count);
 
     fclose(data_file);
     fclose(index_file);
@@ -551,3 +607,4 @@ int delete_records()
 
     return SUCCESS;
 }
+

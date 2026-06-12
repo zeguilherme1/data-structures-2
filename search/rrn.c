@@ -135,27 +135,20 @@ int search_rrn()
 
 void remove_record_by_rrn(FILE *data_file, Header *header, int rrn)
 {
-    long offset =
-        HEADER_SIZE +
-        rrn * RECORD_SIZE;
+    long offset = HEADER_SIZE + rrn * RECORD_SIZE;
+    fseek(data_file, offset, SEEK_SET);
+    char removed_flag;
+    fread(&removed_flag, sizeof(char), 1, data_file);
+    if (removed_flag == TRUE)
+        return;
 
     fseek(data_file, offset, SEEK_SET);
+    char removed = TRUE;
+    int old_top = header->top;
 
-    char removed = FALSE;
-    
-    fwrite(
-        &removed,
-        sizeof(char),
-        1,
-        data_file
-    );
 
-    fwrite(
-        &header->top,
-        sizeof(int),
-        1,
-        data_file
-    );
-
+    fwrite(&removed, sizeof(char), 1, data_file);
+    fwrite(&old_top, sizeof(int), 1, data_file);
     header->top = rrn;
-}   
+
+}

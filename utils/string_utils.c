@@ -58,18 +58,23 @@ void print_string(char *string, int size)
 }
 
 int matches_string(char *criteria_value, char *field, int field_size)
-{	
-	
-	if (strcmp(criteria_value, "NULO") == 0)
-	{
-		if (field_size == 0) return 0;
-		else return -1;
-	}
-	if (field == NULL) return -1;
+{
+    if (strcmp(criteria_value, "NULO") == 0)
+    {
+        return (field_size == 0) ? 0 : -1;
+    }
 
-    if (strcmp(criteria_value, field) != 0) return -1;
-	
-	return 0;
+    if (field_size == 0 || field == NULL)
+        return -1;
+
+    char temp[field_size + 1];
+    memcpy(temp, field, field_size);
+    temp[field_size] = '\0';
+
+    if (strcmp(criteria_value, temp) != 0)
+        return -1;
+
+    return 0;
 }
 
 void clean_string(char *str)
