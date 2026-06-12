@@ -63,6 +63,9 @@ int main()
 	case INDEX_SEARCH:
 		index_or_criteria_search();
 		break;
+	case DELETE:
+		delete_records();
+		break;
 	case UPDATE:
 		update_records();
 		break;

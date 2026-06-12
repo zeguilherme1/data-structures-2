@@ -421,3 +421,133 @@ int update_records()
 
     return SUCCESS;
 }
+
+int delete_records()
+{
+    char data_filename[100];
+    char index_filename[100];
+
+    scanf("%s %s",
+          data_filename,
+          index_filename);
+
+    int removals;
+    scanf("%d", &removals);
+
+    FILE *data_file =
+        fopen(data_filename, "rb+");
+
+    FILE *index_file =
+        fopen(index_filename, "rb+");
+
+    if(data_file == NULL ||
+       index_file == NULL)
+    {
+        printf(
+            "Falha no processamento do arquivo.\n"
+        );
+        return FILE_NOT_FOUND;
+    }
+
+    Header *header =
+        read_binary_header(data_file);
+
+    if(header == NULL ||
+       header->status != TRUE)
+    {
+        printf(
+            "Falha no processamento do arquivo.\n"
+        );
+
+        fclose(data_file);
+        fclose(index_file);
+
+        return FILE_NOT_FOUND;
+    }
+
+    header->status = FALSE;
+    save_header(data_file, header);
+
+    int index_count;
+
+    PrimaryIndex *indexes =
+        load_indexes(
+            index_file,
+            &index_count
+        );
+
+    long data_offset = HEADER_SIZE;
+
+    for(int op = 0; op < removals; op++)
+    {
+        int num_fields;
+        scanf("%d", &num_fields);
+
+        Search_criteria criteria[num_fields];
+
+        read_criteria(
+            criteria,
+            num_fields
+        );
+
+        int count = 0;
+
+        Search_result *results =
+            search_with_rrn(
+                data_file,
+                index_file,
+                data_offset,
+                criteria,
+                num_fields,
+                &count
+            );
+
+        if(results == NULL)
+            continue;
+
+        for(int i = 0; i < count; i++)
+        {
+            remove_record_by_rrn(
+                data_file,
+                header,
+                results[i].rrn
+            );
+
+            remove_index_entry(
+                indexes,
+                &index_count,
+                results[i].record->station_code
+            );
+
+            free_record(
+                &results[i].record
+            );
+        }
+
+        free(results);
+    }
+
+    header->status = TRUE;
+
+    save_header(
+        data_file,
+        header
+    );
+
+    rewrite_index_file(
+        index_filename,
+        indexes,
+        index_count
+    );
+
+    fclose(data_file);
+    fclose(index_file);
+
+    free(indexes);
+    free(header);
+
+    BinarioNaTela(data_filename);
+    BinarioNaTela(index_filename);
+
+    return SUCCESS;
+}

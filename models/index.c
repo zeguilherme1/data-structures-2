@@ -134,3 +134,98 @@ int compare_index(const void *a, const void *b)
     const PrimaryIndex *y = (const PrimaryIndex *)b;
     return x->station_code - y->station_code;
 }
+
+void rewrite_index_file(
+    const char *index_filename,
+    PrimaryIndex *indexes,
+    int count
+)
+{
+    FILE *index_file =
+        fopen(index_filename, "wb+");
+
+    if(index_file == NULL)
+        return;
+
+    char status = TRUE;
+
+    fwrite(
+        &status,
+        sizeof(char),
+        1,
+        index_file
+    );
+
+    fwrite(
+        indexes,
+        sizeof(PrimaryIndex),
+        count,
+        index_file
+    );
+
+    fclose(index_file);
+}
+void remove_index_entry(
+    PrimaryIndex *indexes,
+    int *count,
+    int station_code
+)
+{
+    int pos = -1;
+
+    for(int i = 0; i < *count; i++)
+    {
+        if(indexes[i].station_code
+           == station_code)
+        {
+            pos = i;
+            break;
+        }
+    }
+
+    if(pos == -1)
+        return;
+
+    for(int i = pos;
+        i < *count - 1;
+        i++)
+    {
+        indexes[i] =
+            indexes[i + 1];
+    }
+
+    (*count)--;
+}
+PrimaryIndex *load_indexes(
+    FILE *index_file,
+    int *count
+)
+{
+    fseek(index_file, 0, SEEK_END);
+
+    long size = ftell(index_file);
+
+    *count =
+        (size - 1)
+        / sizeof(PrimaryIndex);
+
+    PrimaryIndex *indexes =
+        malloc(
+            (*count)
+            * sizeof(PrimaryIndex)
+        );
+
+    if(indexes == NULL)
+        return NULL;
+
+    fseek(index_file, 1, SEEK_SET);
+
+    fread(
+        indexes,
+        sizeof(PrimaryIndex),
+        *count,
+        index_file
+    );
+
+    return indexes;
+}

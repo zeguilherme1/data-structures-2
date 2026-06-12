@@ -132,3 +132,30 @@ int search_rrn()
     print_record(result_record); //print found record
     free(bin_header);
 }
+
+void remove_record_by_rrn(FILE *data_file, Header *header, int rrn)
+{
+    long offset =
+        HEADER_SIZE +
+        rrn * RECORD_SIZE;
+
+    fseek(data_file, offset, SEEK_SET);
+
+    char removed = FALSE;
+    
+    fwrite(
+        &removed,
+        sizeof(char),
+        1,
+        data_file
+    );
+
+    fwrite(
+        &header->top,
+        sizeof(int),
+        1,
+        data_file
+    );
+
+    header->top = rrn;
+}   

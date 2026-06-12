@@ -40,5 +40,5 @@ Search_result *search_with_rrn(
 
 */
 int search_rrn();
-
+void remove_record_by_rrn(FILE *data_file, Header *header, int rrn);
 #endif
