@@ -47,6 +47,8 @@ Record *read_rrn_record(
 void apply_updates(Record *rec, Search_criteria *updates, int p);
 
 int delete_records();
+int insert_records();
 int update_records();
+
 
 #endif

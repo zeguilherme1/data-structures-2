@@ -229,3 +229,23 @@ PrimaryIndex *load_indexes(
 
     return indexes;
 }
+
+void insert_index_sorted(
+    PrimaryIndex **indexes,
+    int *count,
+    int *capacity,
+    int station_code,
+    int rrn)
+{
+    if (*count >= *capacity)
+    {
+        *capacity *= 2;
+        *indexes = realloc(*indexes, (*capacity) * sizeof(PrimaryIndex));
+    }
+
+    (*indexes)[*count].station_code = station_code;
+    (*indexes)[*count].rrn = rrn;
+    (*count)++;
+
+    qsort(*indexes, *count, sizeof(PrimaryIndex), compare_index);
+}

@@ -10,6 +10,7 @@
 #include "../models/index.h"
 #include "../search/rrn.h"
 #include "../utils/debug_utils.h"
+#include "../utils/input_utils.h"
 
 #include "binary_io.h"
 
@@ -608,3 +609,195 @@ int delete_records()
     return SUCCESS;
 }
 
+void read_string_field(char **dest, int *size)
+{
+    char buffer[1000];
+
+    scan_quote_string(buffer);
+
+    if (strcmp(buffer, "NULO") == 0)
+    {
+        *dest = NULL;
+        *size = 0;
+        return;
+    }
+
+    *size = strlen(buffer);
+    *dest = malloc(*size + 1);
+    strcpy(*dest, buffer);
+}
+
+Record *read_insert_record()
+{
+    Record *rec = new_record();
+    if (!rec) return NULL;
+
+    char buffer[100];
+
+    // codEstacao 
+    scanf("%s", buffer);
+    rec->station_code = atoi(buffer);
+
+    // nomeEstacao
+    read_string_field(&rec->station_name, &rec->station_name_size);
+
+    // codLinha
+    scanf("%s", buffer);
+    rec->line_code = (strcmp(buffer, "NULO") == 0) ? -1 : atoi(buffer);
+
+    // nomeLinha
+    read_string_field(&rec->line_name, &rec->line_name_size);
+
+    // codProxEstacao
+    scanf("%s", buffer);
+    rec->next_station_code = (strcmp(buffer, "NULO") == 0) ? -1 : atoi(buffer);
+
+    // distProxEstacao
+    scanf("%s", buffer);
+    rec->next_station_distance = (strcmp(buffer, "NULO") == 0) ? -1 : atoi(buffer);
+
+    // codLinhaIntegra
+    scanf("%s", buffer);
+    rec->line_integration_code = (strcmp(buffer, "NULO") == 0) ? -1 : atoi(buffer);
+
+    // codEstIntegra
+    scanf("%s", buffer);
+    rec->station_integration_code = (strcmp(buffer, "NULO") == 0) ? -1 : atoi(buffer);
+
+    return rec;
+}
+
+int insert_records()
+{
+    char data_filename[100];
+    char index_filename[100];
+
+    scanf("%s %s", data_filename, index_filename);
+
+    int insertions;
+    scanf("%d", &insertions);
+
+    FILE *data_file = fopen(data_filename, "rb+");
+    FILE *index_file = fopen(index_filename, "rb+");
+
+    if (data_file == NULL || index_file == NULL)
+    {
+        printf("Falha no processamento do arquivo. aaa");
+        return FILE_NOT_FOUND;
+    }
+
+    Header *header = read_binary_header(data_file);
+    if (header == NULL ||
+        header->status != TRUE)
+    {
+        printf(
+            "Falha no processamento do arquivo.\n");
+
+        fclose(data_file);
+        fclose(index_file);
+
+        return FILE_NOT_FOUND;
+    }
+
+    header->status = FALSE;
+    save_header(data_file, header);
+
+    int index_count = 0;
+    PrimaryIndex *indexes = load_indexes(index_file, &index_count);
+
+    int capacity = (index_count > 0) ? index_count * 2 : 10;
+
+    if (indexes == NULL)
+    {
+        indexes = malloc(capacity * sizeof(PrimaryIndex));
+        if (indexes == NULL)
+        {
+            fclose(data_file);
+            fclose(index_file);
+            free(header);
+            return FILE_NOT_FOUND;
+        }
+    }
+    else
+    {
+        PrimaryIndex *tmp = realloc(indexes, capacity * sizeof(PrimaryIndex));
+        if (tmp == NULL)
+        {
+            free(indexes);
+            fclose(data_file);
+            fclose(index_file);
+            free(header);
+            return FILE_NOT_FOUND;
+        }
+        indexes = tmp;
+    }
+
+    for (int op = 0; op < insertions; op++)
+    {
+        Record *rec = read_insert_record();
+        if (!rec)
+            continue;
+
+        int rrn;
+
+        if (header->top != -1)
+        {
+            rrn = header->top;
+
+            Record *old = read_rrn_record(data_file, rrn);
+
+            if (old != NULL)
+            {
+                header->top = old->next_record;
+                free_record(&old);
+            }
+            else
+            {
+                header->top = -1;
+            }
+        }
+        else
+        {
+            rrn = header->nextRRN;
+            header->nextRRN++;
+        }
+
+        long offset = HEADER_SIZE + rrn * RECORD_SIZE;
+        fseek(data_file, offset, SEEK_SET);
+
+        rec->removed = FALSE;
+        rec->next_record = -1;
+
+        save_record_to_bin(data_file, rec);
+
+        header->station_num++;
+
+        if (rec->next_station_code != -1)
+        {
+            if (!exists_station_pair(data_file, header, rec->station_code, rec->next_station_code))
+            {
+                header->station_pairs_num++;
+            }
+        }
+
+        insert_index_sorted(&indexes, &index_count, &capacity, rec->station_code, rrn);
+
+        free_record(&rec);
+    }
+
+    header->status = '1';
+    save_header(data_file, header);
+
+    rewrite_index_file(index_filename, indexes, index_count);
+
+    fclose(data_file);
+    fclose(index_file);
+
+    free(indexes);
+    free(header);
+
+    BinarioNaTela(data_filename);
+    BinarioNaTela(index_filename);
+
+    return SUCCESS;
+}

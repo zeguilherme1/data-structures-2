@@ -66,6 +66,9 @@ int main()
 	case DELETE:
 		delete_records();
 		break;
+	case INSERT:
+		insert_records();
+		break;
 	case UPDATE:
 		update_records();
 		break;
