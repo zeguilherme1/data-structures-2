@@ -13,12 +13,11 @@
 #include "models/header.h"
 #include "models/index.h"
 
-#include "io/csv_io.h"
-#include "io/binary_io.h"
+#include "io/io.h"
 
-#include "search/criteria.h"
-#include "search/rrn.h"
-#include "utils/string_utils.h"
+#include "search/search.h"
+#include "utils/utils.h"
+#include "edit_record/edit.h"
 
 enum functions
 {

@@ -5,69 +5,79 @@
 
 #include "../models/header.h"
 #include "../models/record.h"
-#include "../io/binary_io.h"
+#include "../io/io.h"
 
-#include "rrn.h"
-#include "criteria.h"
+#include "./search.h"
 
 Search_result *search_with_rrn(FILE *data_file, FILE *index_file, long data_offset, Search_criteria *criteria, int num_fields, int *count)
 {
     *count = 0;
-    int capacity = 10; //defines a capacity and if it's ultrapassed realloc more memory
+    int capacity = 10; // Start with a default capacity to avoid constant reallocation
     Search_result *results = malloc(capacity * sizeof(Search_result));
 
+    // Try finding the primary key to optimize the search
     int has_station_code = get_station_code(criteria, num_fields);
-    
-    //index search (if has codEstacao)
-    if(has_station_code != NO_DATA_ERROR && index_file != NULL)
+
+    // Optimized indexed search path (If we have codEstacao)
+    if (has_station_code != NO_DATA_ERROR && index_file != NULL)
     {
         fseek(index_file, 0, SEEK_SET);
         int rrn = find_rrn_by_station_code(index_file, has_station_code);
-        
-        if(rrn == NO_DATA_ERROR) return NULL;
+
+        if (rrn == NO_DATA_ERROR)
+            return NULL; // Not found
 
         Record *rec = read_rrn_record(data_file, rrn);
-        
-        //check if all criteria matches
-        if(rec != NULL && 
+
+        // Validate if the record exists, is active, and respects the remaining criteria
+        if (rec != NULL &&
             rec->removed == FALSE &&
             matches_record_criteria(rec, criteria, num_fields) == 0)
         {
-            //retuns a array with the find record 
-            results = malloc(sizeof(Search_result));
+            // Found matching record, allocate strictly what is needed
+            results = realloc(results, sizeof(Search_result));
             results[0].record = rec;
             results[0].rrn = rrn;
             *count = 1;
             return results;
         }
-        if(rec != NULL) free_record(&rec);
+
+        // Discard the record if it didn't pass the final validation
+        if (rec != NULL)
+            free_record(&rec);
+        free(results);
         return NULL;
     }
-    //sequential search
+
+    // Fallback: Sequential search path
     fseek(data_file, data_offset, SEEK_SET);
 
     int rrn = 0;
-    
-    while(1)
+
+    // Scan through the entire data file
+    while (1)
     {
         Record *rec = new_record();
         int ret = read_record(data_file, rec);
 
-        if(ret == -1)
+        if (ret == -1) // EOF reached
         {
             free_record(&rec);
             break;
         }
-        //check if all criteria matches
-        if(rec->removed == FALSE &&
+
+        // Validate if the record is active and satisfies all criteria
+        if (rec->removed == FALSE &&
             matches_record_criteria(rec, criteria, num_fields) == 0)
         {
-            //reallocate if capacity is exceeded
+            // Capacity check: Double the memory size if we ran out of space in the array
             if (*count == capacity)
             {
                 capacity = (capacity == 0) ? 10 : capacity * 2;
 
                 Search_result *temp = realloc(results, capacity * sizeof(Search_result));
+
+                // Safety check in case memory allocation fails
                 if (temp == NULL)
                 {
                     for (int i = 0; i < *count; i++)
@@ -80,17 +90,20 @@ Search_result *search_with_rrn(FILE *data_file, FILE *index_file, long data_offs
 
                 results = temp;
             }
-            //store the found results in search_results struct
+
+            // Store the matching record and its respective RRN
             results[*count].record = rec;
             results[*count].rrn = rrn;
             (*count)++;
             rrn++;
-            continue;
+            continue; // Skip the free() at the end of the loop since we kept the reference
         }
 
+        // Clean up memory if it was removed or didn't match
         free_record(&rec);
         rrn++;
     }
+
     return results;
 }
 
@@ -99,11 +112,12 @@ int search_rrn()
     char bin_filename[100];
     int rrn;
 
-    scanf("%s %d", bin_filename, &rrn); //read name file and rrn
+    scanf("%s %d", bin_filename, &rrn); // Read file name and the target RRN to fetch
 
     FILE *bin_file = fopen(bin_filename, READ_BINARY_MODE);
 
-    if (bin_file == NULL){
+    if (bin_file == NULL)
+    {
         printf("Falha no processamento do arquivo.");
         return -1;
     }
@@ -113,15 +127,17 @@ int search_rrn()
     if (bin_header == NULL)
         return MALLOC_ERROR;
 
-    //validate rrn bounds
+    // Validate bounds: The requested RRN must be positive and lower than the total inserted records
     if (rrn < 0 || rrn >= bin_header->nextRRN)
     {
         printf("Registro inexistente.\n");
         fclose(bin_file);
         return NO_DATA_ERROR;
     }
-    //direct acess to record using rrn
+
+    // Direct access in O(1) to the exact byte offset using RRN calculation
     Record *result_record = read_rrn_record(bin_file, rrn);
+
     if (result_record == NULL)
     {
         printf("Registro inexistente.\n");
@@ -129,26 +145,36 @@ int search_rrn()
         return NO_DATA_ERROR;
     }
 
-    print_record(result_record); //print found record
+    print_record(result_record); // Display fetched record
     free(bin_header);
+    return SUCCESS;
 }
 
 void remove_record_by_rrn(FILE *data_file, Header *header, int rrn)
 {
+    // Calculate precise byte offset using standard equation: Header Size + (RRN * Record Size)
     long offset = HEADER_SIZE + rrn * RECORD_SIZE;
+
     fseek(data_file, offset, SEEK_SET);
+
+    // Read the first byte to verify if it's already removed
     char removed_flag;
     fread(&removed_flag, sizeof(char), 1, data_file);
     if (removed_flag == TRUE)
-        return;
+        return; // Ignore if already removed
 
+    // Go back to the beginning of the record to start overwriting
     fseek(data_file, offset, SEEK_SET);
+
     char removed = TRUE;
-    int old_top = header->top;
+    int old_top = header->top; // Get the current Top of the logical removal stack
 
-
+    // Mark the record as removed
     fwrite(&removed, sizeof(char), 1, data_file);
-    fwrite(&old_top, sizeof(int), 1, data_file);
-    header->top = rrn;
 
+    // Write the old top to maintain the linked stack of logically removed records
+    fwrite(&old_top, sizeof(int), 1, data_file);
+
+    // Update the header's top variable to point to the newly removed RRN (Push operation)
+    header->top = rrn;
 }
