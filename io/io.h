@@ -116,5 +116,7 @@ void save_record(FILE *bin_file, Record *record);
             No return.
 */
 void save_record_to_bin(FILE *bin_file, Record *record);
+int generate_graph();
+int shortest_path();
 
 #endif

@@ -1,8 +1,8 @@
 all:
-	gcc -g main.c edit_record/*.c models/*.c io/*.c parser/*.c search/*.c utils/*.c -o main
+	g++ -g main.cpp edit_record/*.cpp models/*.cpp io/*.cpp parser/*.cpp search/*.cpp utils/*.cpp -o main
 
 run: all
 	./main
 
 build:
-	gcc main.c edit_record/*.c models/*.c io/*.c parser/*.c search/*.c utils/*.c -o main -w
+	g++ main.cpp edit_record/*.cpp models/*.cpp io/*.cpp parser/*.cpp search/*.cpp utils/*.cpp -o main -w
