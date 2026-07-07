@@ -34,6 +34,8 @@ enum functions
 	UPDATE,
 	GENERATE_GRAPH,
 	SHORTEST_PATH,
+	MINIMUM_SPANNING_TREE,
+	COUNT_CYCLES
 } Functions;
 
 int main()
@@ -79,6 +81,12 @@ int main()
 		break;
 	case SHORTEST_PATH:
 		shortest_path();
+		break;
+	case MINIMUM_SPANNING_TREE:
+		minimum_spanning_tree();
+		break;
+	case COUNT_CYCLES:
+		count_cycles();
 		break;
 	}
 

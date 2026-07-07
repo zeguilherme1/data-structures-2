@@ -116,7 +116,46 @@ void save_record(FILE *bin_file, Record *record);
             No return.
 */
 void save_record_to_bin(FILE *bin_file, Record *record);
+
+/*
+    generate_graph:
+        This function builds and prints an adjacency list for a directed graph
+        representing the train/subway network.
+
+        Args:
+            No args.
+
+        Return:
+            0 if successful, or -1 if an error occurs.
+*/
 int generate_graph();
+
+/*
+    shortest_path:
+        This function applies Dijkstra's algorithm to find and print the 
+        shortest path between an origin and a destination station.
+
+        Args:
+            No args.
+
+        Return:
+            0 if successful, or -1 if an error occurs.
+*/
 int shortest_path();
 
+/*
+    minimum_spanning_tree:
+        This function applies Prim's algorithm to find the Minimum Spanning Tree (MST)
+        of the undirected station network, then prints its pre-order traversal (DFS).
+
+        Args:
+            No args.
+
+        Return:
+            0 if successful, or -1 if an error occurs.
+*/
+int minimum_spanning_tree();
+
+
+int count_cycles();
 #endif
