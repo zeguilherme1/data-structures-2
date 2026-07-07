@@ -15,10 +15,11 @@
 
 
 #include "io/io.h"
-
+#include "graph/graph.h"
 #include "search/search.h"
 #include "utils/utils.h"
 #include "edit_record/edit.h"
+
 
 enum functions
 {

@@ -18,10 +18,11 @@
 #include "../search/search.h"
 #include "../parser/tokenizer.h"
 #include "../utils/utils.h"
+#include "../io/io.h"
 
 #define INF 1e8 + 5
 
-#include "io.h"
+#include "graph.h"
 
 int generate_graph()
 {
@@ -637,32 +638,36 @@ int count_cycles()
     char arg1[100], arg2[100], arg3[100];
     char origin[100];
 
-    
+    // Read the first argument (binary file name)
     if (scanf("%s", arg1) != 1) {
         printf("Falha na execução da funcionalidade.\n");
         return -1;
     }
-    
+
+    // Read the second argument (may be the index file name or already the field name)
     scanf("%s", arg2);
 
-    
+    // If the second argument is a .bin file (index file), read one more argument (the field)
+    // and then read the quoted string (the origin); otherwise arg2 was already the field
+    // and we read the quoted string directly
     if (strstr(arg2, ".bin") != NULL) {
-        scanf("%s", arg3); 
-        scan_quote_string(origin); 
+        scanf("%s", arg3);
+        scan_quote_string(origin);
     } else {
-        
-        scan_quote_string(origin); 
+        scan_quote_string(origin);
     }
-    
+
     std::string origem_str(origin);
     char* bin_filename = arg1;
 
+    // Open the binary file for reading
     FILE *bin_file = fopen(bin_filename, READ_BINARY_MODE);
     if (bin_file == NULL) {
         printf("Falha na execução da funcionalidade.\n");
         return -1;
     }
 
+    // Read and validate the file header
     Header *temp_header = new_header();
     if (read_header(bin_file, temp_header) == -1 || temp_header->status != '1') {
         printf("Falha na execução da funcionalidade.\n");
@@ -671,9 +676,8 @@ int count_cycles()
         return -1;
     }
 
+    // Map station code -> station name, skipping removed records
     std::unordered_map<int, std::string> station_dict;
-
-    
     for (int i = 0; i < temp_header->nextRRN; i++) {
         Record *rec = read_rrn_record(bin_file, i);
         if (rec != NULL) {
@@ -684,28 +688,30 @@ int count_cycles()
         }
     }
 
+    // Directed graph: origin station name -> map of (destination name -> edge data)
     std::map<std::string, std::map<std::string, Node>> graph;
 
-    
     for (int i = 0; i < temp_header->nextRRN; i++) {
         Record *rec = read_rrn_record(bin_file, i);
         if (rec != NULL) {
             if (rec->removed == FALSE && rec->station_name != NULL) {
                 std::string origin_name = std::string(rec->station_name);
 
+                // Add regular line edge (next station on the same line)
                 if (rec->next_station_code != -1 && station_dict.find(rec->next_station_code) != station_dict.end()) {
                     std::string dest_name = station_dict[rec->next_station_code];
-
                     if (origin_name != dest_name) {
                         graph[origin_name][dest_name].next_station_distance = rec->next_station_distance;
+                        // Store the line name associated with this edge, if it exists
                         if (rec->line_name != NULL) graph[origin_name][dest_name].linhas.insert(std::string(rec->line_name));
                     }
                 }
 
+                // Add physical integration edge (distance 0 if no other edge exists yet)
                 if (rec->station_integration_code != -1 && station_dict.find(rec->station_integration_code) != station_dict.end()) {
                     std::string dest_name = station_dict[rec->station_integration_code];
-
                     if (origin_name != dest_name) {
+                        // Only zero out the distance if this edge had no line recorded yet
                         if (graph[origin_name][dest_name].linhas.empty()) graph[origin_name][dest_name].next_station_distance = 0;
                         graph[origin_name][dest_name].linhas.insert("Integração");
                     }
@@ -718,20 +724,18 @@ int count_cycles()
     free(temp_header);
     fclose(bin_file);
 
+    // If the origin station doesn't exist in the graph, there's no way to search for cycles
     if (graph.find(origem_str) == graph.end()) {
         printf("Quantidade de ciclos: -1\n");
         return 0;
     }
 
-    
+    // Run DFS from the origin, counting how many times it returns to it (cycles)
     int total_cycles = 0;
-    std::map<std::string, int> cor; 
-
-    
+    std::map<std::string, int> cor; // tracks the visit state of each vertex during DFS
     dfs_cycle_counter(origem_str, origem_str, graph, cor, total_cycles);
 
-    
-
+    // Print the total number of cycles found, or -1 if none were found
     if (total_cycles > 0) {
         printf("Quantidade de ciclos: %d\n", total_cycles);
     } else {
